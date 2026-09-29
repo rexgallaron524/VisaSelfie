@@ -1,0 +1,24 @@
+.env
+.env.*
+.env *
+!.env.example
+!.env.*.example
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+.coverage
+htmlcov/
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+*.log
+.DS_Store
+.idea/
+.vscode/
+playwright-report/
+test-results/
+*.db

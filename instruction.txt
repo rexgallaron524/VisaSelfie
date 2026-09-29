@@ -1,0 +1,372 @@
+Build a demo web platform called **Visa Selfie**.
+
+## Project Goal
+
+Visa Selfie is a secure intermediary platform for collecting, storing, managing, and auditing facial verification videos for visa applicants.
+
+For now, the demo should focus only on secure client registration, guided facial video capture, storage, and admin management.
+
+## Main Roles
+
+### 1. Administrator
+The administrator is the operator managing visa applicants.
+
+The admin must be able to:
+- log in securely,
+- create a new client/process,
+- enter basic client information,
+- generate a unique registration link,
+- define link expiration automatically at 48 hours,
+- copy the link and send it manually through WhatsApp,
+- view all submitted clients,
+- see process status,
+- view submitted client data,
+- securely view or download submitted videos,
+- delete videos,
+- track timestamps and important actions.
+
+### 2. Client / Visa Applicant
+
+The client receives a unique link through WhatsApp.
+
+The client must be able to:
+- open the link on mobile,
+- see whether the link is valid or expired,
+- register using:
+  - full name,
+  - date of birth,
+  - passport number,
+  - phone number,
+- accept a consent/privacy notice,
+- view facial recording instructions,
+- proceed to facial video recording,
+- record video using the device front camera,
+- preview the video,
+- retake if needed,
+- confirm and submit the recording,
+- receive a success confirmation.
+
+## Phase 1 Workflow
+
+1. Admin logs into dashboard.
+2. Admin creates a new client/process.
+3. Platform generates a unique secure tokenized link.
+4. Link expires after 48 hours.
+5. Admin manually sends the link using WhatsApp.
+6. Client opens the link.
+7. Client enters:
+   - full name,
+   - date of birth,
+   - passport number,
+   - phone number.
+8. Client accepts consent.
+9. Client sees recording instructions.
+10. Client starts facial recording.
+11. Client previews the video.
+12. Client either:
+   - retakes the video,
+   - or confirms submission.
+13. Platform uploads the video securely.
+14. Video is linked to the correct client/process.
+15. Admin sees the process status change to submitted.
+16. Admin can review the data and video.
+17. Admin can delete the video when no longer needed.
+
+## Recording Guidance
+
+Before recording, show simple instructions such as:
+- use good lighting,
+- keep the face fully visible,
+- remove sunglasses or face coverings,
+- look directly at the camera,
+- keep the phone steady,
+- ensure only one face is visible,
+- follow any movement instructions if required.
+
+For the demo, keep the recording flow simple.
+
+Use the front-facing camera.
+
+Support modern mobile browsers.
+
+Prefer WebRTC / MediaRecorder API for browser-based capture.
+
+## Demo Capacity
+
+The demo should initially support approximately:
+- 30 to 50 videos.
+
+The system should still be designed so it can scale later.
+
+## Technical Stack
+
+Use:
+
+### Frontend
+- Next.js
+- React
+- TypeScript
+- Tailwind CSS
+
+### Backend
+- Python
+- FastAPI
+
+### Database
+- PostgreSQL
+
+### Storage
+Use secure object storage such as:
+- AWS S3,
+- Cloudflare R2,
+- MinIO,
+- or another S3-compatible provider.
+
+Do not store video blobs directly inside PostgreSQL.
+
+Store only metadata and storage references in the database.
+
+## Suggested Data Model
+
+Create entities similar to:
+
+### AdminUser
+- id
+- email
+- password_hash
+- created_at
+- last_login
+
+### ClientProcess
+- id
+- full_name
+- date_of_birth
+- passport_number
+- phone_number
+- status
+- created_at
+- updated_at
+
+Possible statuses:
+- created
+- link_generated
+- opened
+- registered
+- recording_started
+- submitted
+- reviewed
+- deleted
+- expired
+
+### RegistrationLink
+- id
+- client_process_id
+- token_hash
+- expires_at
+- opened_at
+- used_at
+- created_at
+- status
+
+### VideoSubmission
+- id
+- client_process_id
+- storage_key
+- original_filename
+- mime_type
+- file_size
+- duration
+- uploaded_at
+- deleted_at
+- status
+
+### ConsentRecord
+- id
+- client_process_id
+- consent_version
+- accepted_at
+- ip_address
+- user_agent
+
+### AuditLog
+- id
+- actor_type
+- actor_id
+- action
+- entity_type
+- entity_id
+- metadata
+- created_at
+
+## Security Requirements
+
+This project handles sensitive personal and biometric-related data.
+
+Implement the demo with strong security defaults.
+
+Required:
+- HTTPS-ready architecture,
+- secure authentication,
+- hashed passwords,
+- secure random tokens,
+- token expiration after 48 hours,
+- no raw token storage if avoidable,
+- authorization checks on all admin endpoints,
+- signed or protected video access,
+- no public video URLs,
+- server-side validation,
+- file type validation,
+- upload size limits,
+- CSRF protection where relevant,
+- rate limiting,
+- audit logging,
+- secure HTTP headers,
+- environment variables for secrets,
+- no secrets committed to Git.
+
+Passport numbers should not be exposed unnecessarily in logs.
+
+## Privacy and Retention
+
+The platform should support:
+- explicit consent before recording,
+- manual video deletion,
+- future automatic retention rules,
+- audit trail for deletion,
+- clear distinction between active and deleted records.
+
+
+## WhatsApp
+
+For the demo:
+- do NOT implement automatic WhatsApp sending yet.
+- The platform should generate the secure client link.
+- The admin will copy and send that link manually using WhatsApp Business.
+
+Design the system so WhatsApp Business / Meta Cloud API integration can be added later.
+
+
+## Appointment Monitoring Bot
+
+The client also requested a future feature that monitors VFS appointment availability and alerts the admin when new appointment slots open.
+
+Do not fully implement aggressive scraping in Phase 1.
+
+For now:
+- create a placeholder module,
+- define an interface,
+- add a basic scheduler structure,
+- allow future notification support.
+
+Do not bypass CAPTCHA, authentication protections, rate limits, or anti-bot controls.
+
+Any future monitoring must respect officially accessible endpoints and platform terms.
+
+## Admin Dashboard Pages
+
+Create:
+- login page,
+- dashboard overview,
+- client/process list,
+- create client form,
+- client detail page,
+- generated link section,
+- process status indicator,
+- video review area,
+- delete action,
+- audit history section.
+
+Dashboard overview should show:
+- total clients,
+- pending registration,
+- submitted videos,
+- expired links,
+- recently updated processes.
+
+## Client Pages
+
+Create:
+- link validation page,
+- registration page,
+- consent page,
+- recording instructions page,
+- camera recording page,
+- video preview page,
+- submission success page,
+- expired link page,
+- invalid link page.
+
+## UX Requirements
+
+The client-facing experience should be:
+- mobile-first,
+- simple,
+- fast,
+- clear,
+- minimal,
+- usable by non-technical users.
+
+The admin dashboard should be:
+- clean,
+- practical,
+- professional,
+- easy to scan.
+
+## Demo Infrastructure
+
+Assume:
+- 2 vCPU,
+- 4 GB RAM,
+- PostgreSQL,
+- S3-compatible object storage,
+- HTTPS,
+- 5–10 GB initial storage.
+
+## Deliverables
+
+Build a functional demo with:
+
+1. admin authentication,
+2. client creation,
+3. secure 48-hour link generation,
+4. client registration,
+5. consent capture,
+6. recording instructions,
+7. browser facial video recording,
+8. preview and retake,
+9. secure upload,
+10. admin process tracking,
+11. video review,
+12. video deletion,
+13. audit logging,
+14. basic responsive UI,
+15. Docker-based local development setup,
+16. README with setup instructions.
+
+## Development Quality
+
+Use:
+- clean architecture,
+- typed APIs,
+- modular services,
+- reusable components,
+- database migrations,
+- proper error handling,
+- structured logging,
+- validation schemas,
+- secure defaults.
+
+Prefer:
+- SQLAlchemy,
+- Alembic,
+- Pydantic,
+- JWT or secure session authentication,
+- presigned upload/download URLs if appropriate.
+
+Start by generating:
+1. the project architecture,
+2. database schema,
+3. API routes,
+4. frontend page structure,
+5. Docker setup,
+6. then implement the Phase 1 flow end-to-end.
