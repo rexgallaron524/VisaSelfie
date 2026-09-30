@@ -125,12 +125,12 @@ def list_processes(
 
 
 @router.post("/admin/processes", response_model=LinkIssued, status_code=201)
-def create_process(payload: CreateProcess, admin: CurrentAdmin, db: Database):
+def create_process(request: Request, payload: CreateProcess, admin: CurrentAdmin, db: Database):
     process = ClientProcess(**payload.model_dump())
     db.add(process)
     db.flush()
     audit(db, process, "process.created", admin.id)
-    result = issue_link(db, process, admin.id)
+    result = issue_link(db, process, admin.id, request.app.state.settings)
     db.commit()
     return result
 
@@ -158,9 +158,9 @@ def detail(process_id: uuid.UUID, admin: CurrentAdmin, db: Database):
 
 
 @router.post("/admin/processes/{process_id}/link", response_model=LinkIssued)
-def regenerate(process_id: uuid.UUID, admin: CurrentAdmin, db: Database):
+def regenerate(request: Request, process_id: uuid.UUID, admin: CurrentAdmin, db: Database):
     process = process_by_id(db, process_id, lock=True)
-    result = issue_link(db, process, admin.id)
+    result = issue_link(db, process, admin.id, request.app.state.settings)
     db.commit()
     return result
 

@@ -22,3 +22,4 @@ out/
 playwright-report/
 test-results/
 *.db
+backups/

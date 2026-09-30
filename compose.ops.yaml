@@ -1,0 +1,28 @@
+# Add after compose.yaml and compose.production.yaml; jobs run only on request.
+x-backup-environment: &backup-environment
+  PGHOST: db
+  PGUSER: ${POSTGRES_USER:?Set POSTGRES_USER}
+  PGPASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+  PGDATABASE: ${POSTGRES_DB:?Set POSTGRES_DB}
+
+services:
+  backup:
+    profiles: [ops]
+    build: ./deploy/ops
+    command: ["sh", "/ops/backup.sh"]
+    environment: *backup-environment
+    volumes:
+      - object_data:/objects:ro
+      - caddy_data:/certificates:ro
+      - ${BACKUP_DIR:-./backups}:/backups
+  restore:
+    profiles: [ops]
+    build: ./deploy/ops
+    command: ["sh", "/ops/restore.sh"]
+    environment:
+      <<: *backup-environment
+      RESTORE_BACKUP: ${RESTORE_BACKUP:-}
+    volumes:
+      - object_data:/objects
+      - caddy_data:/certificates
+      - ${BACKUP_DIR:-./backups}:/backups:ro

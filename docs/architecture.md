@@ -8,8 +8,9 @@ appointment-monitoring interfaces remain dormant; no scheduler or notification r
 
 ```mermaid
 flowchart LR
-    Admin[Admin browser] --> Web[Next.js]
-    Client[Applicant mobile browser] --> Web
+    Admin[Admin browser] --> Gateway[Caddy HTTPS container]
+    Client[Applicant mobile browser] --> Gateway
+    Gateway --> Web[Next.js]
     Web -->|Streaming same-origin API proxy| API[FastAPI]
     API --> DB[(PostgreSQL: data, token hashes, consent, audit)]
     API --> Probe[ffprobe validation]
@@ -17,7 +18,10 @@ flowchart LR
 ```
 
 Browsers never receive storage credentials or public video URLs. HTTPS terminates at
-the deployment edge; local desktop development uses the localhost secure-context exception.
+the Caddy container in production; local desktop development uses the localhost
+secure-context exception. Only Caddy publishes ports 80/443 in production. Certificate,
+database, and object volumes persist across container replacement. Recovery procedures
+and the isolated deployment test are documented in [deployment.md](deployment.md).
 
 ## Modules and persistence
 
@@ -51,8 +55,10 @@ PostgreSQL row locks serialize mutations on a process. No video bytes are in the
 
 1. Admin creates a process; an invitation is returned once with a random 256-bit
    token and expiry exactly 48 hours later. Only the token hash persists.
-2. The link uses a URL fragment. The browser sends its bearer token in a header;
-   URL access logs and referrers never receive the raw token.
+2. The backend builds `/register/<token>` from validated `FRONTEND_PUBLIC_URL`,
+   never request headers. The browser sends its bearer token to the API in a header.
+   Legacy fragment links still work. Registration page requests contain the token;
+   deployment access logs must omit/redact those paths. Referrers and caching are disabled.
 3. Opening records the first open time. Registration validates all required fields.
 4. Versioned consent is required before recording/upload. Once consent is accepted,
    applicant details cannot be silently overwritten through that link.
@@ -98,7 +104,9 @@ a generic message plus a request ID without leaking database parameters.
 All unsafe requests require an exact trusted Origin, including login and applicant
 requests. Session cookies are host-only, HttpOnly, SameSite=Lax, and Secure in
 production. Passwords use Argon2. Tokens/credentials are never placed in localStorage.
-Registration tokens remain in the private invitation's fragment during the flow.
+Registration tokens remain in the private invitation's path during the flow.
+The public origin is configured once in the backend; the admin UI copies its returned
+URL. Production requires HTTPS and an explicit origin allowlist containing that origin.
 
 API/video responses have no-store caching and security headers. Structured request
 logs use route templates, not actual tokens or request bodies. Admin authorization is
@@ -110,7 +118,9 @@ The demo uses one API worker and in-memory rate limiting (login: 5/minute, uploa
 6/minute, default: 120/minute per observed connection IP). The proxy shares an IP in
 local Docker. An internet deployment should put verified client-IP rate limiting at
 the trusted edge; adding API replicas requires shared limiter storage. Connection IP
-in the consent record is the observed peer, not an untrusted forwarded header.
+in the consent record is the observed peer by default. `FORWARDED_ALLOW_IPS` enables
+Uvicorn proxy middleware only for explicitly trusted IPs/CIDRs; the Next.js API proxy
+strips forwarded headers, so leave this empty in the default architecture.
 
 Deployment configuration: HTTPS origin allowlist, Secure cookies, private networks,
 HSTS at the edge, appropriate upload/time limits, and a production Next.js build.

@@ -1,0 +1,52 @@
+# Docker Compose 2.24.4+; only the gateway publishes ports in production.
+x-production-environment: &production-environment
+  APP_ENV: production
+  COOKIE_SECURE: "true"
+  FRONTEND_PUBLIC_URL: ${FRONTEND_PUBLIC_URL:?Set an HTTPS FRONTEND_PUBLIC_URL}
+  ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:?Set explicit HTTPS ALLOWED_ORIGINS}
+
+services:
+  db:
+    restart: unless-stopped
+    ports: !reset []
+  storage:
+    restart: unless-stopped
+  api:
+    restart: unless-stopped
+    ports: !reset []
+    environment: *production-environment
+  migrate:
+    environment: *production-environment
+  storage-init:
+    environment: *production-environment
+  web:
+    restart: unless-stopped
+    ports: !reset []
+    build:
+      target: production
+    environment:
+      NODE_ENV: production
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/login').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+  gateway:
+    build: ./deploy/caddy
+    restart: unless-stopped
+    environment:
+      FRONTEND_PUBLIC_URL: ${FRONTEND_PUBLIC_URL:?Set an HTTPS FRONTEND_PUBLIC_URL}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      web:
+        condition: service_healthy
+
+volumes:
+  caddy_data:
+  caddy_config:

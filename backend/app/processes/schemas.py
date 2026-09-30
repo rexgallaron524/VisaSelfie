@@ -67,6 +67,7 @@ class ProcessSummary(BaseModel):
 class LinkIssued(BaseModel):
     process_id: uuid.UUID
     token: str
+    registration_url: str
     expires_at: datetime
 
 

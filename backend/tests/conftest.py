@@ -33,8 +33,10 @@ def db():
 @pytest.fixture
 def client(db):
     settings = Settings(
+        _env_file=None,
         database_url="sqlite://",
         app_env="test",
+        frontend_public_url="http://testserver",
         cookie_secure=False,
         allowed_origins=["http://testserver"],
     )

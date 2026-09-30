@@ -8,6 +8,7 @@ import {
   type FormEvent,
 } from "react";
 import { Brand } from "@/components/brand";
+import { useParams } from "next/navigation";
 import { CameraRecorder } from "@/components/camera-recorder";
 import { apiRequest, ApiError } from "@/lib/api";
 import type { PublicState } from "@/lib/types";
@@ -24,6 +25,8 @@ type Step =
   | "error";
 
 export default function RegisterPage() {
+  const params = useParams<{ token?: string }>();
+  const pathToken = params.token;
   const [step, setStep] = useState<Step>("loading");
   const [state, setState] = useState<PublicState | null>(null);
   const [error, setError] = useState("");
@@ -48,7 +51,7 @@ export default function RegisterPage() {
   const validate = useCallback(async () => {
     setStep("loading");
     setError("");
-    const currentToken = window.location.hash.slice(1);
+    const currentToken = pathToken ?? window.location.hash.slice(1);
     setToken(currentToken);
     if (!currentToken || currentToken.length > 128) {
       setStep("invalid");
@@ -75,7 +78,7 @@ export default function RegisterPage() {
         setError(e instanceof Error ? e.message : "Unable to check your link.");
       }
     }
-  }, [handleError]);
+  }, [handleError, pathToken]);
   useEffect(() => {
     let active = true;
     queueMicrotask(() => {

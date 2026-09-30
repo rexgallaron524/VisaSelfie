@@ -25,6 +25,7 @@ export interface ClientProcess {
 export interface IssuedLink {
   process_id: string;
   token: string;
+  registration_url: string;
   expires_at: string;
 }
 export interface ProcessList {

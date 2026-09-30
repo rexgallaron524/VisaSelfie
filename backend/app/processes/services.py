@@ -67,7 +67,7 @@ def summary(db: Session, process: ClientProcess) -> ProcessSummary:
     )
 
 
-def issue_link(db: Session, process: ClientProcess, admin_id):
+def issue_link(db: Session, process: ClientProcess, admin_id, settings: Settings):
     if process.status in {"submitted", "reviewed", "deleted"}:
         raise HTTPException(409, "This process is closed. Create a new process for another video.")
     for link in db.scalars(
@@ -87,7 +87,12 @@ def issue_link(db: Session, process: ClientProcess, admin_id):
         process.status = "link_generated"
     process.updated_at = utcnow()
     audit(db, process, "link.generated", admin_id)
-    return {"process_id": process.id, "token": token, "expires_at": expires}
+    return {
+        "process_id": process.id,
+        "token": token,
+        "registration_url": f"{settings.frontend_public_url}/register/{token}",
+        "expires_at": expires,
+    }
 
 
 def applicant(db: Session, authorization: str | None):

@@ -6,7 +6,7 @@ import type { IssuedLink } from "@/lib/types";
 export function LinkPanel({ link }: { link: IssuedLink }) {
   const [copied, setCopied] = useState(false);
   const [failed, setFailed] = useState(false);
-  const url = `${typeof window === "undefined" ? "" : window.location.origin}/register#${link.token}`;
+  const url = link.registration_url;
   async function copy() {
     try {
       await navigator.clipboard.writeText(url);

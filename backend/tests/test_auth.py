@@ -123,9 +123,21 @@ def test_security_headers(client):
 
 def test_production_configuration_requires_https_and_secure_cookies():
     with pytest.raises(ValueError, match="secure cookies"):
-        Settings(database_url="postgresql+psycopg://unused", cookie_secure=False)
+        Settings(
+            _env_file=None,
+            database_url="postgresql+psycopg://unused",
+            app_env="production",
+            frontend_public_url="https://demo.example.com",
+            allowed_origins=["https://demo.example.com"],
+            cookie_secure=False,
+        )
     with pytest.raises(ValueError, match="HTTPS"):
-        Settings(database_url="postgresql+psycopg://unused")
+        Settings(
+            _env_file=None,
+            database_url="postgresql+psycopg://unused",
+            app_env="production",
+            cookie_secure=True,
+        )
 
 
 def test_production_sets_secure_cookie(client):

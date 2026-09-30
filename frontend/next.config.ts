@@ -11,6 +11,12 @@ const config: NextConfig = {
         { key: "Referrer-Policy", value: "no-referrer" },
         { key: "Permissions-Policy", value: "camera=(self), microphone=(), geolocation=()" },
       ],
+    }, {
+      source: "/register/:path*",
+      headers: [
+        { key: "Cache-Control", value: "private, no-store" },
+        { key: "X-Robots-Tag", value: "noindex, nofollow" },
+      ],
     }];
   },
 };

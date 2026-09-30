@@ -7,7 +7,10 @@ WhatsApp sharing is manual. Appointment monitoring is not enabled or part of thi
 
 ## Start locally with Docker
 
-Requirements: Docker Desktop/Engine with Compose. From this repository:
+Requirements: Docker Desktop/Engine with Compose 2.24.4 or later and support for
+the project's Linux container images. Windows with Docker Desktop's WSL2 backend
+is supported. No host installation of Node.js, Python, PostgreSQL, FFmpeg, or Caddy
+is required to run the application. From this repository:
 
 ```powershell
 # First setup only; keep your existing .env if you already have one.
@@ -15,6 +18,9 @@ Copy-Item .env.example .env
 ```
 
 Edit `.env`: set a random `POSTGRES_PASSWORD`, `S3_ACCESS_KEY`, and `S3_SECRET_KEY`.
+For local development set `FRONTEND_PUBLIC_URL=http://localhost:3000`,
+`APP_ENV=development`, `COOKIE_SECURE=false`, and
+`ALLOWED_ORIGINS=http://localhost:3000` (JSON arrays are also supported).
 Use different credentials for the database and storage. Use URL-safe characters
 (letters, numbers, `_`, `-`) for the database password because Compose embeds it in
 the connection URL. Never commit `.env` or copies containing secrets.
@@ -69,12 +75,9 @@ secure browser context: `http://localhost` works on your own computer; a phone n
 a reachable **HTTPS** address. A link to `localhost` on a phone refers to the phone,
 not your computer. The local Compose ports deliberately bind to loopback.
 
-For phone testing, put the web service behind your HTTPS reverse proxy on a reachable
-hostname, set `ALLOWED_ORIGINS=["https://your-hostname"]`, `COOKIE_SECURE=true`, and
-`APP_ENV=production`, then rebuild/restart. Generate links while using that hostname.
-Route browser traffic through Next.js, keep API/database/storage private, and configure
-the proxy to accept 30 MiB request bodies and at least 180-second upload timeouts.
-Do not enable request-body logging. Set HSTS at the HTTPS edge.
+For phone testing use the HTTPS deployment described below. A configured URL alone
+does not provision DNS, certificates, or internet hosting; deploy to a server with
+a reachable domain. Do not expose or tunnel the local development server.
 
 If a WhatsApp embedded browser blocks camera access, open the link in Safari/Chrome.
 Camera-denied, unsupported-browser, invalid-link, expired-link, oversized-recording,
@@ -100,15 +103,85 @@ issued. Deletion first disables video access, removes the object, then records s
 if storage is unavailable, **Retry deletion** completes the operation later.
 
 Tokens use 256 bits of randomness and are stored only as hashes. Invitation tokens
-are in the link fragment (`/register#...`), which is not sent in HTTP request URLs;
-the page sends the token in an authorization header. Links expire after 48 hours
-and are consumed on successful submission. Treat the complete link as private.
+are in the registration path (`/register/<token>`); the page sends the token to API
+endpoints only in an authorization header. Links expire after 48 hours and are
+consumed on successful submission. Treat the complete link as private. Registration
+pages disable caching, referrers, and indexing. Disable or redact registration URL
+logging at your CDN, hosting platform, reverse proxy, and web server, since the
+initial page request contains the token. Do not attach analytics to this route.
+Previously issued `/register#<token>` links remain supported until they expire.
 
 Consent records contain the notice version, acceptance time, connection IP, and user
 agent. In the local proxy setup the connection IP is the internal proxy address;
 the API intentionally does not trust arbitrary forwarded-IP headers. The local rate
 limit is also shared by requests from that proxy. Configure verified client IP handling
 and a shared rate limiter at your trusted edge before a multi-instance deployment.
+
+## HTTPS deployment and canonical registration links
+
+On a new deployment host, create its own private `.env` from `.env.production.example`, supply
+the database/storage credentials, and set:
+
+```dotenv
+APP_ENV=production
+FRONTEND_PUBLIC_URL=https://demo.example.com
+ALLOWED_ORIGINS=https://demo.example.com
+COOKIE_SECURE=true
+FORWARDED_ALLOW_IPS=
+```
+
+`FRONTEND_PUBLIC_URL` is the canonical frontend origin. The backend returns
+`registration_url` for both new and replacement invitations, for example
+`https://demo.example.com/register/<token>`. The admin page copies this exact value,
+regardless of its current browser address or incoming Host/forwarded headers.
+Trailing slashes are removed; invalid URLs, credentials, paths, query strings, and
+fragments are rejected. Production rejects HTTP public URLs and HTTP allowed origins.
+The public origin must appear in `ALLOWED_ORIGINS`; use comma-separated origins or
+a JSON array when more than one origin is needed. Wildcards are rejected.
+
+```powershell
+docker compose -f compose.yaml -f compose.production.yaml up --build -d
+```
+
+The production override includes Caddy as the HTTPS gateway, a built Next.js app,
+secure production API settings, persistent database/video/certificate volumes, and
+restart policies for long-running services. Only Caddy publishes host ports: TCP
+80 and 443. The frontend, API, database, and storage have no published production ports.
+Point the hostname's DNS records to the server and allow TCP 80/443 through the host
+and provider firewalls. Caddy obtains and renews certificates, redirects HTTP to
+HTTPS, and forwards requests to `web:3000`. There is no separate Caddy installation.
+Access logging is disabled because registration paths contain tokens. If another
+CDN or proxy is added, disable/redact those paths there too. Do not log request bodies.
+
+See [the deployment and recovery guide](docs/deployment.md) for startup checks,
+client handover, cold backup/restore, and the isolated deployment test.
+
+The browser uses the same public origin for pages and `/api/`; Next.js streams API
+requests to `API_INTERNAL_URL` (Docker sets `http://api:8000`). No
+`NEXT_PUBLIC_APP_URL` is needed. Cookies remain HttpOnly, SameSite=Lax, and host-only
+(no Domain attribute), so they belong to the public frontend host. `COOKIE_SECURE`
+can be omitted: it defaults to true for an HTTPS public URL and false for local HTTP.
+An explicit false value is rejected in production. No cross-domain cookie setting
+is needed for this same-origin architecture. Explicit origins also protect API
+mutations against CSRF; credentialed CORS responses never use `*`.
+
+Forwarded headers are ignored by default. With the included Next.js API proxy, leave
+`FORWARDED_ALLOW_IPS` empty: that proxy intentionally strips untrusted forwarding
+headers. If your deployment instead routes `/api/` directly from a trusted edge to
+FastAPI, set `FORWARDED_ALLOW_IPS` to only that proxy's IP addresses or CIDRs (comma
+separated), and make the edge overwrite `X-Forwarded-Proto` and `X-Forwarded-For`.
+The API applies Uvicorn's proxy-header middleware to these trusted peers only;
+wildcard trust is rejected. Its server command disables Uvicorn's separate automatic
+proxy handling so this application policy is authoritative. Never use forwarded
+headers to choose the canonical registration URL. See
+[Uvicorn proxy settings](https://www.uvicorn.org/settings/#http) and
+[FastAPI behind a proxy](https://fastapi.tiangolo.com/advanced/behind-a-proxy/).
+
+After deploying, sign in at the HTTPS domain, create a client, and open the generated
+link on a phone. Grant camera permission in Safari/Chrome. HTTPS is required for
+mobile camera access; a real device and valid certificate are still needed to verify
+platform-specific permissions. Existing 48-hour expiration and replacement behavior
+is unchanged; already shared links retain their original hostname.
 
 Video deletion is manual in Phase 1. Operators must decide their retention schedule
 and handle backups accordingly. This demo collects recordings for human review; it
@@ -160,6 +233,10 @@ Checks from `frontend/`: `npm run lint`, `npm run typecheck`, and `npm run build
 Unit/API tests use temporary SQLite databases and a memory storage double. They test
 authorization, consent gating, link expiry/replacement, replay prevention, upload
 limits, storage failures, private downloads, deletion retries, and migrations.
+`backend/tests/test_public_url.py` also covers canonical local/HTTPS links (including
+replacement), normalization, invalid settings, 48-hour expiry, secure login/logout
+cookies, production origins/CORS, spoofed hosts, and trusted/untrusted proxy headers.
+The browser smoke test uses `/register/<token>` and checks registration privacy headers.
 
 For a real PostgreSQL/S3/browser check, start Docker, install Playwright into the
 development environment, and run from the root:
