@@ -56,6 +56,8 @@ default allowed browser origin. API docs are at http://localhost:8000/api/docs.
    is prefilled from the operator's invitation and cannot be edited by the applicant.
    Contact the operator if it is incorrect. The server rejects a different number
    and preserves the operator's saved value, allowing equivalent spacing and punctuation.
+   Applicants can optionally add an email address, alternative phone number and
+   residential address. These appear in the private administrator client details.
 4. Read and accept the privacy notice, then follow the recording instructions.
 5. Allow front-camera access and follow the 18-second randomized movement prompts.
    Recording stops automatically. No microphone is needed.
@@ -68,7 +70,10 @@ default allowed browser origin. API docs are at http://localhost:8000/api/docs.
 
 The overview shows client counts, pending registrations, submitted/reviewed videos,
 expired links, recent processes, and activity. The client list supports name search,
-status filters, and pagination. An expired link can be replaced from client details;
+status filters, and pagination with 10, 30 or 50 clients per page (10 by default).
+Pagination bars above and below the list retain filters and show the current range
+and page numbers. A Back to top button appears after scrolling 600 pixels.
+An expired link can be replaced from client details;
 replacement immediately revokes the old link and preserves existing registration/consent.
 Completed/deleted processes are closed; create a new process for another recording.
 
@@ -323,6 +328,14 @@ long names, touch targets, form text, short viewports and camera layout states.
 Screenshots are saved in ignored `test-results/responsive/` and may include existing
 dashboard data; keep them private. Camera responses are mocked for layout coverage;
 this check does not certify camera support on physical phones or validate liveness.
+
+Run `.\.venv\Scripts\python scripts/check_clients_dashboard.py` with the same
+environment to verify both pagination bars, filtering, page-size changes, Back to
+top and optional contact registration at phone, tablet and desktop widths. It
+creates and removes its own test records. Migration `0004_client_contact_details`
+adds nullable contact fields without replacing existing records. Existing clients
+show “Not provided” for missing contact details; unfinished registrations must
+accept the updated consent notice before recording.
 
 Runtime dependencies are pinned in `backend/requirements.lock` and
 `frontend/package-lock.json`. Refresh Python pins with

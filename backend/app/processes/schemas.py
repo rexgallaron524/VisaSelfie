@@ -2,12 +2,13 @@ import re
 import uuid
 from datetime import date, datetime
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
-CONSENT_VERSION = "2026-09-30-video-checks"
+CONSENT_VERSION = "2026-10-01-contact-details"
 CONSENT_TEXT = (
     "I agree that the operator who sent me this link may collect my name, date of birth, "
-    "passport number, phone number, and facial video to manage my visa verification process. "
+    "passport number, phone number, any optional email, alternative phone number and residential "
+    "address I provide, and facial video to manage my visa verification process. "
     "The video and my details are stored privately and can be accessed by authorized "
     "administrators. My consent time, connection IP address, and browser information are "
     "recorded for auditing. The operator can download or delete the video and retains it "
@@ -43,6 +44,19 @@ class CreateProcess(ClientFields):
 class Registration(ClientFields):
     date_of_birth: date
     passport_number: str = Field(min_length=5, max_length=32, pattern=r"^[A-Za-z0-9 -]+$")
+    email: EmailStr | None = Field(default=None, max_length=254)
+    alternative_phone_number: str | None = Field(default=None, max_length=32)
+    address: str | None = Field(default=None, max_length=500)
+
+    @field_validator("email", "alternative_phone_number", "address", mode="before")
+    @classmethod
+    def empty_contact_is_none(cls, value):
+        return value.strip() or None if isinstance(value, str) else value
+
+    @field_validator("alternative_phone_number")
+    @classmethod
+    def valid_alternative_phone(cls, value):
+        return ClientFields.valid_phone(value) if value is not None else None
 
     @field_validator("date_of_birth")
     @classmethod
@@ -103,6 +117,9 @@ class ConsentInfo(BaseModel):
 class ProcessDetail(ProcessSummary):
     date_of_birth: date | None
     passport_number: str | None
+    email: str | None
+    alternative_phone_number: str | None
+    address: str | None
     consent: ConsentInfo | None
     video: VideoInfo | None
     history: list[EventInfo]

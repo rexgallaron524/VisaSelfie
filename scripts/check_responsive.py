@@ -31,11 +31,11 @@ def check_layout(page, label, screenshots=False):
       const issues = [];
       const width = document.documentElement.clientWidth;
       if (document.documentElement.scrollWidth > width + 1) issues.push('page overflow');
-      for (const el of document.querySelectorAll('input, select, button, a, video')) {
+      for (const el of document.querySelectorAll('input, select, textarea, button, a, video')) {
         const r = el.getBoundingClientRect();
         if (!r.width || !r.height || getComputedStyle(el).visibility === 'hidden') continue;
         if (r.left < -1 || r.right > width + 1) issues.push(el.tagName + ': outside viewport');
-        if (['INPUT', 'SELECT'].includes(el.tagName) && el.type !== 'checkbox' &&
+        if (['INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName) && el.type !== 'checkbox' &&
             parseFloat(getComputedStyle(el).fontSize) < 16) issues.push('small form text');
         if (['BUTTON', 'A'].includes(el.tagName) && r.height < 43)
           issues.push(el.tagName + ': small touch target');

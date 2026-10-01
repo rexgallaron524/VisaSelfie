@@ -43,6 +43,9 @@ export interface Overview {
 export interface ProcessDetail extends ClientProcess {
   date_of_birth: string | null;
   passport_number: string | null;
+  email: string | null;
+  alternative_phone_number: string | null;
+  address: string | null;
   consent: { consent_version: string; accepted_at: string } | null;
   video: {
     id: string;

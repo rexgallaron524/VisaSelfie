@@ -107,7 +107,7 @@ def list_processes(
     q: str = Query(default="", max_length=200),
     status: str = "",
     page: int = Query(default=1, ge=1),
-    page_size: int = Query(default=20, ge=1, le=100),
+    page_size: int = Query(default=10, ge=1, le=100),
 ):
     query, state = listing_query()
     if q.strip():
@@ -159,6 +159,9 @@ def detail(process_id: uuid.UUID, admin: CurrentAdmin, db: Database):
         **summary(db, process).model_dump(),
         date_of_birth=process.date_of_birth,
         passport_number=process.passport_number,
+        email=process.email,
+        alternative_phone_number=process.alternative_phone_number,
+        address=process.address,
         consent=consent_for(db, process.id),
         video=db.scalar(
             select(VideoSubmission).where(VideoSubmission.client_process_id == process.id)

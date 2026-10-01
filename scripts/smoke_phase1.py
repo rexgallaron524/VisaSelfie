@@ -141,7 +141,7 @@ with get_session_factory()() as db:
             expect(page.get_by_role("heading", name="Your details")).to_be_visible()
             page.get_by_label("Date of birth").fill("1990-06-15")
             page.get_by_label("Passport number").fill("TEST123456")
-            phone = page.get_by_label("Phone number including country code")
+            phone = page.get_by_label("Phone number including country code", exact=True)
             expect(phone).to_have_value("+44 7700 900123")
             expect(phone).to_have_attribute("readonly", "")
             phone.press("End")

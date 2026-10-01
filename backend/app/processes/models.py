@@ -16,6 +16,9 @@ class ClientProcess(Base):
     date_of_birth: Mapped[date | None] = mapped_column(Date)
     passport_number: Mapped[str | None] = mapped_column(String(32))
     phone_number: Mapped[str] = mapped_column(String(32))
+    email: Mapped[str | None] = mapped_column(String(254))
+    alternative_phone_number: Mapped[str | None] = mapped_column(String(32))
+    address: Mapped[str | None] = mapped_column(String(500))
     status: Mapped[str] = mapped_column(String(32), default="created", index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(

@@ -285,6 +285,22 @@ export default function RegisterPage() {
                   changed here. If it is incorrect, contact your operator.
                 </p>
               </div>
+              <fieldset className="space-y-5 border-t border-slate-200 pt-5">
+                <legend className="px-1 text-sm font-semibold text-slate-700">Additional contact details (optional)</legend>
+                <div>
+                  <label htmlFor="email" className="field-label">Email address</label>
+                  <input id="email" name="email" type="email" autoComplete="email" maxLength={254} className="field-input" />
+                </div>
+                <div>
+                  <label htmlFor="alternative_phone_number" className="field-label">Alternative phone number including country code</label>
+                  <input id="alternative_phone_number" name="alternative_phone_number" type="tel" autoComplete="section-alternative tel" maxLength={32} className="field-input" />
+                </div>
+                <div>
+                  <label htmlFor="address" className="field-label">Residential address</label>
+                  <textarea id="address" name="address" autoComplete="street-address" rows={3} maxLength={500} className="field-input resize-y" aria-describedby="address-help" />
+                  <p id="address-help" className="mt-2 text-sm text-slate-500">Include your street or neighbourhood, city and country.</p>
+                </div>
+              </fieldset>
               <button disabled={pending} className="primary-button w-full">
                 {pending ? "Saving…" : "Continue"}
               </button>

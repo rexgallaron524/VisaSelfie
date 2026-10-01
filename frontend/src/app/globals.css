@@ -14,9 +14,9 @@ body {
 }
 
 html { scroll-padding-block: 1rem; }
-button, a, input, select { -webkit-tap-highlight-color: transparent; }
-input, select, button { min-width: 0; }
-input, select { scroll-margin-block: 1rem; }
+button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+input, select, button, textarea, fieldset { min-width: 0; }
+input, select, textarea { scroll-margin-block: 1rem; }
 video { max-width: 100%; }
 button:not(:disabled), a { cursor: pointer; }
 :focus-visible { outline: 3px solid #14b8a6; outline-offset: 4px; }

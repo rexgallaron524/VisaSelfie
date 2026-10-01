@@ -119,10 +119,13 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
                   process.passport_number ?? "Awaiting registration",
                 ],
                 ["Phone", process.phone_number],
+                ["Email address", process.email ?? "Not provided"],
+                ["Alternative phone", process.alternative_phone_number ?? "Not provided"],
+                ["Residential address", process.address ?? "Not provided"],
               ].map(([label, value]) => (
                 <div key={label}>
                   <dt className="text-xs text-slate-500">{label}</dt>
-                  <dd className="mt-1 break-words">{value}</dd>
+                  <dd className="mt-1 whitespace-pre-line break-words">{value}</dd>
                 </div>
               ))}
               <div>
