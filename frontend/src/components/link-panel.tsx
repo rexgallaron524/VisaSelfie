@@ -17,7 +17,7 @@ export function LinkPanel({ link }: { link: IssuedLink }) {
     }
   }
   return (
-    <div className="rounded-xl border border-teal-200 bg-teal-50 p-5">
+    <div className="min-w-0 rounded-xl border border-teal-200 bg-teal-50 p-4 sm:p-5">
       <h2 className="font-semibold text-teal-900">Registration link ready</h2>
       <p className="my-3 text-sm leading-6 text-teal-900">
         Copy this private link and send it to the applicant using WhatsApp. It
@@ -33,7 +33,7 @@ export function LinkPanel({ link }: { link: IssuedLink }) {
         onFocus={(e) => e.currentTarget.select()}
         className="field-input"
       />
-      <button type="button" onClick={copy} className="primary-button mt-3">
+      <button type="button" onClick={copy} className="primary-button mt-3 w-full sm:w-auto">
         {copied ? "Copied!" : "Copy link"}
       </button>
       {failed && (

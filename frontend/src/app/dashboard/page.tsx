@@ -17,7 +17,7 @@ export default async function DashboardPage() {
   ];
   return (
     <>
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+      <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="mb-2 text-xs font-semibold tracking-widest text-teal-700">
             YOUR WORKSPACE
@@ -27,15 +27,15 @@ export default async function DashboardPage() {
             Manage client registrations and review verification videos.
           </p>
         </div>
-        <Link href="/dashboard/clients/new" className="primary-button">
+        <Link href="/dashboard/clients/new" className="primary-button shrink-0">
           + Create client
         </Link>
       </div>
-      <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:mb-8 sm:gap-4 lg:grid-cols-4">
         {cards.map(([label, value]) => (
           <div
             key={label}
-            className="rounded-2xl border border-slate-200 bg-white p-5"
+            className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5"
           >
             <p className="text-xs text-slate-500">{label}</p>
             <p className="mt-3 text-3xl font-semibold">{value}</p>
@@ -43,16 +43,16 @@ export default async function DashboardPage() {
         ))}
       </div>
       <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
-        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-          <div className="flex items-center justify-between p-5">
+        <section className="min-w-0 rounded-2xl border border-slate-200 bg-white">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 p-4 sm:p-5">
             <h2 className="font-semibold">Recently updated clients</h2>
-            <Link href="/dashboard/clients" className="text-sm text-teal-700">
+            <Link href="/dashboard/clients" className="touch-target shrink-0 text-sm text-teal-700">
               View all →
             </Link>
           </div>
           <ProcessTable processes={clients.items} />
         </section>
-        <section className="rounded-2xl border border-slate-200 bg-white">
+        <section className="min-w-0 rounded-2xl border border-slate-200 bg-white">
           <h2 className="border-b border-slate-100 p-5 font-semibold">
             Recent activity
           </h2>

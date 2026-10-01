@@ -25,11 +25,11 @@ export function LogoutButton() {
   }
 
   return (
-    <div>
+    <div className="max-w-40">
       <button
         onClick={logout}
         disabled={pending || !hydrated}
-        className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+        className="touch-target rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-50 sm:px-4"
       >
         {pending ? "Signing out…" : "Sign out"}
       </button>

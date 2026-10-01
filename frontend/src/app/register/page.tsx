@@ -142,10 +142,10 @@ export default function RegisterPage() {
     "camera",
   ].indexOf(step);
   return (
-    <main className="mx-auto min-h-dvh max-w-xl px-5 py-7">
+    <main className="page-shell mx-auto min-h-dvh max-w-xl py-4 sm:py-7">
       <Brand />
       <div
-        className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 sm:p-8"
+        className="mt-5 min-w-0 rounded-2xl border border-slate-200 bg-white p-4 sm:mt-8 sm:p-8"
         ref={heading}
         tabIndex={-1}
         style={{ outline: "none" }}
@@ -298,11 +298,11 @@ export default function RegisterPage() {
               {state?.consent_text}
             </p>
             <form method="post" onSubmit={consent}>
-              <label className="flex items-start gap-3 rounded-xl border border-slate-200 p-4 text-sm leading-6">
+              <label className="flex min-h-11 items-start gap-3 rounded-xl border border-slate-200 p-4 text-sm leading-6">
                 <input
                   type="checkbox"
                   required
-                  className="mt-1 size-4 shrink-0 accent-teal-700"
+                  className="mt-1 size-5 shrink-0 accent-teal-700"
                 />
                 I have read the privacy notice and consent to the collection and
                 use of my details and facial video.

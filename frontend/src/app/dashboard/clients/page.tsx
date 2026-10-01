@@ -23,7 +23,7 @@ export default async function ClientsPage({
   };
   return (
     <>
-      <div className="mb-8 flex flex-wrap justify-between gap-4">
+      <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-semibold">Clients</h1>
           <p className="mt-2 text-sm text-slate-500">
@@ -34,8 +34,8 @@ export default async function ClientsPage({
           + Create client
         </Link>
       </div>
-      <form className="mb-5 flex flex-wrap items-end gap-3">
-        <div className="min-w-52 flex-1">
+      <form className="mb-5 grid items-end gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_minmax(0,16rem)_auto]">
+        <div className="min-w-0">
           <label htmlFor="q" className="field-label">
             Search by name
           </label>
@@ -47,7 +47,7 @@ export default async function ClientsPage({
             className="field-input"
           />
         </div>
-        <div>
+        <div className="min-w-0">
           <label htmlFor="status" className="field-label">
             Status
           </label>
@@ -65,14 +65,14 @@ export default async function ClientsPage({
             ))}
           </select>
         </div>
-        <button className="primary-button">Filter</button>
+        <button className="primary-button sm:col-span-2 lg:col-span-1">Filter</button>
       </form>
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+      <div className="min-w-0 rounded-2xl border border-slate-200 bg-white">
         <ProcessTable processes={data.items} />
       </div>
-      <div className="mt-5 flex items-center justify-between text-sm">
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm">
         {page > 1 ? (
-          <Link href={pageUrl(page - 1)} className="text-teal-700">
+          <Link href={pageUrl(page - 1)} className="touch-target text-teal-700">
             ← Previous
           </Link>
         ) : (
@@ -80,7 +80,7 @@ export default async function ClientsPage({
         )}
         <span>Page {page}</span>
         {page * data.page_size < data.total ? (
-          <Link href={pageUrl(page + 1)} className="text-teal-700">
+          <Link href={pageUrl(page + 1)} className="touch-target text-teal-700">
             Next →
           </Link>
         ) : (

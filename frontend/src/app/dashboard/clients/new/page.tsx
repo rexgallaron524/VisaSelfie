@@ -30,8 +30,8 @@ export default function NewClientPage() {
     }
   }
   return (
-    <div className="max-w-xl">
-      <Link href="/dashboard/clients" className="text-sm text-teal-700">
+    <div className="min-w-0 max-w-xl">
+      <Link href="/dashboard/clients" className="touch-target text-sm text-teal-700">
         ← Clients
       </Link>
       <h1 className="mt-5 text-3xl font-semibold">Create a client</h1>
@@ -45,7 +45,7 @@ export default function NewClientPage() {
           <LinkPanel link={link} />
           <Link
             href={`/dashboard/clients/${link.process_id}`}
-            className="mt-5 inline-block text-teal-700 underline"
+            className="touch-target mt-5 text-teal-700 underline"
           >
             View client process →
           </Link>
@@ -54,7 +54,7 @@ export default function NewClientPage() {
         <form
           method="post"
           onSubmit={submit}
-          className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6"
+          className="space-y-5 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6"
         >
           <div>
             <label htmlFor="full_name" className="field-label">
@@ -89,7 +89,7 @@ export default function NewClientPage() {
               {error}
             </p>
           )}
-          <button disabled={pending || !hydrated} className="primary-button">
+          <button disabled={pending || !hydrated} className="primary-button w-full sm:w-auto">
             {pending ? "Creating…" : "Create client and link"}
           </button>
         </form>

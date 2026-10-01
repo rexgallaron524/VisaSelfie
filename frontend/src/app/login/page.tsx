@@ -22,9 +22,9 @@ export default function LoginPage() {
         </div>
         <p className="text-xs text-teal-100/50">Visa Selfie · Administration</p>
       </section>
-      <section className="flex flex-col bg-white px-6 py-8 sm:px-12 lg:px-16">
+      <section className="page-shell flex min-w-0 flex-col bg-white py-6 sm:py-8 lg:px-16">
         <div className="lg:hidden"><Brand /></div>
-        <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center py-16">
+        <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center py-8 sm:py-12 lg:py-16">
           <p className="mb-3 text-xs font-semibold tracking-[0.18em] text-teal-700">ADMIN PORTAL</p>
           <h2 className="text-3xl font-semibold tracking-tight text-slate-900">Welcome back.</h2>
           <p className="mt-3 text-sm leading-6 text-slate-500">Sign in to access your Visa Selfie workspace.</p>

@@ -10,14 +10,29 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
+  overflow-wrap: anywhere;
 }
 
-button, a, input { -webkit-tap-highlight-color: transparent; }
+html { scroll-padding-block: 1rem; }
+button, a, input, select { -webkit-tap-highlight-color: transparent; }
+input, select, button { min-width: 0; }
+input, select { scroll-margin-block: 1rem; }
+video { max-width: 100%; }
 button:not(:disabled), a { cursor: pointer; }
 :focus-visible { outline: 3px solid #14b8a6; outline-offset: 4px; }
 
 @layer components {
+  .page-shell { padding-left: max(1rem, env(safe-area-inset-left)); padding-right: max(1rem, env(safe-area-inset-right)); }
+  .touch-target { @apply inline-flex min-h-11 items-center justify-center; }
   .field-label { @apply mb-2 block text-sm font-medium text-slate-700; }
-  .field-input { @apply block w-full rounded-xl border border-slate-300 bg-white px-4 py-3.5 text-base text-slate-900 placeholder:text-slate-400 focus:border-teal-600 focus:outline-2 focus:outline-teal-600 disabled:opacity-60; }
-  .primary-button { @apply inline-flex items-center justify-center gap-4 rounded-xl bg-teal-800 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-teal-900 disabled:cursor-wait disabled:opacity-60; }
+  .field-input { @apply block min-w-0 max-w-full w-full rounded-xl border border-slate-300 bg-white px-4 py-3.5 text-base text-slate-900 placeholder:text-slate-400 focus:border-teal-600 focus:outline-2 focus:outline-teal-600 disabled:opacity-60; }
+  .primary-button { @apply inline-flex min-h-11 max-w-full items-center justify-center gap-3 rounded-xl bg-teal-800 px-5 py-3.5 text-center text-sm font-semibold text-white transition hover:bg-teal-900 disabled:cursor-wait disabled:opacity-60; }
+}
+
+@media (min-width: 640px) {
+  .page-shell { padding-left: max(1.5rem, env(safe-area-inset-left)); padding-right: max(1.5rem, env(safe-area-inset-right)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
 }

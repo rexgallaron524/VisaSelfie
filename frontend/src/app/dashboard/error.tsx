@@ -2,8 +2,8 @@
 
 export default function DashboardError({ reset }: { reset: () => void }) {
   return (
-    <main className="grid min-h-dvh place-items-center px-6">
-      <div className="max-w-md rounded-2xl border border-slate-200 bg-white p-8">
+    <div className="grid min-h-[50dvh] place-items-center">
+      <div className="min-w-0 max-w-md rounded-2xl border border-slate-200 bg-white p-4 sm:p-8">
         <h1 className="text-xl font-semibold">
           We couldn’t load your workspace.
         </h1>
@@ -15,6 +15,6 @@ export default function DashboardError({ reset }: { reset: () => void }) {
           Try again
         </button>
       </div>
-    </main>
+    </div>
   );
 }

@@ -306,6 +306,24 @@ check admin playback/deletion and unauthorized S3 access, and cleans up its own
 records. Seeded storage tests do not demonstrate successful live-face verification.
 Physical iOS/Android devices still need manual camera/permission testing over HTTPS.
 
+Responsive layouts use stacked navigation and client cards on narrow screens,
+with tables and multiple columns when there is room. Forms, links, review actions
+and camera controls adapt to portrait and landscape viewports without disabling zoom.
+To check the running demo across phone, tablet and desktop sizes:
+
+```powershell
+$env:SMOKE_BASE_URL = "https://your-configured-domain.example"
+.\.venv\Scripts\python scripts/check_responsive.py
+```
+
+Use your actual deployment URL (or `http://localhost:3000` for local development).
+The script uses the same Playwright and Docker settings as the smoke test. It
+creates and removes its own test records, checks widths from 320 to 1920 pixels,
+long names, touch targets, form text, short viewports and camera layout states.
+Screenshots are saved in ignored `test-results/responsive/` and may include existing
+dashboard data; keep them private. Camera responses are mocked for layout coverage;
+this check does not certify camera support on physical phones or validate liveness.
+
 Runtime dependencies are pinned in `backend/requirements.lock` and
 `frontend/package-lock.json`. Refresh Python pins with
 `uv pip compile backend/pyproject.toml --universal --output-file backend/requirements.lock`.

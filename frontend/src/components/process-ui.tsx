@@ -36,7 +36,7 @@ export function Status({ value }: { value: string }) {
       : "bg-slate-100 text-slate-600";
   return (
     <span
-      className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${color}`}
+      className={`inline-block max-w-full rounded-full px-3 py-1 text-xs font-medium ${color}`}
     >
       {readable(value)}
     </span>
@@ -44,13 +44,28 @@ export function Status({ value }: { value: string }) {
 }
 export function ProcessTable({ processes }: { processes: ClientProcess[] }) {
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-left text-sm">
+    <div className="@container min-w-0">
+      <ul aria-label="Client processes" className="divide-y divide-slate-100 @min-[36rem]:hidden">
+        {processes.map((p) => (
+          <li key={p.id} className="space-y-2 p-4">
+            <Link href={`/dashboard/clients/${p.id}`} className="flex min-h-11 items-center font-semibold text-teal-800 underline-offset-4 hover:underline">
+              {p.full_name}
+            </Link>
+            <p className="text-sm text-slate-500">{p.phone_number}</p>
+            <Status value={p.status} />
+            <p className="text-xs leading-5 text-slate-500">
+              Updated <DateText value={p.updated_at} />
+            </p>
+          </li>
+        ))}
+      </ul>
+      <div className="hidden @min-[36rem]:block">
+      <table className="w-full table-fixed text-left text-sm">
         <thead className="border-b border-slate-100 bg-slate-50 text-xs text-slate-500">
           <tr>
-            <th className="p-4">Client</th>
-            <th className="p-4">Status</th>
-            <th className="p-4">Last updated</th>
+            <th scope="col" className="w-[44%] p-4">Client</th>
+            <th scope="col" className="w-[28%] p-4">Status</th>
+            <th scope="col" className="w-[28%] p-4">Last updated</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
@@ -59,7 +74,7 @@ export function ProcessTable({ processes }: { processes: ClientProcess[] }) {
               <td className="p-4">
                 <Link
                   href={`/dashboard/clients/${p.id}`}
-                  className="font-semibold text-teal-800 underline-offset-4 hover:underline"
+                  className="flex min-h-11 items-center font-semibold text-teal-800 underline-offset-4 hover:underline"
                 >
                   {p.full_name}
                 </Link>
@@ -75,6 +90,7 @@ export function ProcessTable({ processes }: { processes: ClientProcess[] }) {
           ))}
         </tbody>
       </table>
+      </div>
       {!processes.length && (
         <p className="p-8 text-center text-sm text-slate-500">
           No client processes found.

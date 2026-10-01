@@ -46,16 +46,16 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
   }
   return (
     <>
-      <Link href="/dashboard/clients" className="text-sm text-teal-700">
+      <Link href="/dashboard/clients" className="touch-target text-sm text-teal-700">
         ← Clients
       </Link>
-      <div className="my-6 flex flex-wrap items-center justify-between gap-4">
-        <div>
+      <div className="my-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 flex-1">
           <h1 className="mb-3 text-3xl font-semibold">{process.full_name}</h1>
           <Status value={process.status} />
         </div>
         <button
-          className="rounded-lg border border-slate-300 px-4 py-2 text-sm"
+          className="touch-target shrink-0 rounded-lg border border-slate-300 px-4 py-2 text-sm"
           disabled={!hydrated}
           onClick={() => router.refresh()}
         >
@@ -85,7 +85,7 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
               ? "Permanently delete this video from private storage? The client record and audit history will remain. This cannot be undone."
               : "Generate a new 48-hour link? Any previous link will stop working. Registration and consent already provided will be preserved."}
           </p>
-          <div className="mt-4 flex gap-3">
+          <div className="mt-4 flex flex-wrap gap-3">
             <button
               disabled={pending || !hydrated}
               onClick={() => act(confirmation)}
@@ -96,7 +96,7 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
             <button
               disabled={pending || !hydrated}
               onClick={() => setConfirmation(null)}
-              className="px-4 text-sm"
+              className="touch-target px-4 text-sm"
             >
               Cancel
             </button>
@@ -104,8 +104,8 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
         </div>
       )}
       <div className="grid items-start gap-6 lg:grid-cols-2">
-        <div className="space-y-6">
-          <section className="rounded-2xl border border-slate-200 bg-white p-6">
+        <div className="min-w-0 space-y-6">
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
             <h2 className="mb-5 text-lg font-semibold">Client information</h2>
             <dl className="space-y-4 text-sm">
               {[
@@ -148,7 +148,7 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
             </dl>
           </section>
           {!closed && (
-            <section className="rounded-2xl border border-slate-200 bg-white p-6">
+            <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
               {issued ? (
                 <LinkPanel link={issued} />
               ) : (
@@ -162,7 +162,7 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
                   <button
                     onClick={() => setConfirmation("link")}
                     disabled={pending || !hydrated}
-                    className="primary-button"
+                    className="primary-button w-full sm:w-auto"
                   >
                     Generate new link
                   </button>
@@ -171,8 +171,8 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
             </section>
           )}
         </div>
-        <div className="space-y-6">
-          <section className="rounded-2xl border border-slate-200 bg-white p-6">
+        <div className="min-w-0 space-y-6">
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
             <h2 className="text-lg font-semibold">Facial video</h2>
             {video && video.status !== "deleted" && (
               <div className="my-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-950">
@@ -207,7 +207,7 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
                         controls
                         playsInline
                         preload="metadata"
-                        className="aspect-[4/3] w-full rounded-xl bg-slate-950"
+                        className="aspect-[4/3] max-h-[60svh] w-full rounded-xl bg-slate-950 object-contain"
                         onError={() =>
                           setError(
                             "Unable to load the video. Refresh your session and retry.",
@@ -216,17 +216,17 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
                       />
                     ) : (
                       <button
-                        className="mb-4 grid aspect-[4/3] w-full place-items-center rounded-xl bg-slate-900 text-sm text-white"
+                        className="mb-4 grid aspect-[4/3] max-h-[60svh] w-full place-items-center rounded-xl bg-slate-900 text-sm text-white"
                         disabled={!hydrated}
                         onClick={() => setPlaying(true)}
                       >
                         ▶ View recording
                       </button>
                     )}
-                    <div className="mt-4 flex flex-wrap gap-4">
+                    <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-4">
                       <a
                         href={`/api${endpoint}/video?download=true`}
-                        className="text-sm font-medium text-teal-800 underline"
+                        className="touch-target text-sm font-medium text-teal-800 underline"
                       >
                         Download video
                       </a>
@@ -234,7 +234,7 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
                         <button
                           disabled={pending || !hydrated}
                           onClick={() => act("review")}
-                          className="text-sm font-medium text-teal-800 underline"
+                          className="touch-target text-sm font-medium text-teal-800 underline"
                         >
                           Mark reviewed
                         </button>
@@ -242,7 +242,7 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
                       <button
                         disabled={pending || !hydrated}
                         onClick={() => setConfirmation("delete")}
-                        className="text-sm font-medium text-red-700 underline"
+                        className="touch-target text-sm font-medium text-red-700 underline"
                       >
                         Delete video
                       </button>
@@ -266,7 +266,7 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
               </>
             )}
           </section>
-          <section className="rounded-2xl border border-slate-200 bg-white p-6">
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
             <h2 className="mb-4 font-semibold">Process history</h2>
             <p className="mb-4 text-xs text-slate-500">Latest 100 events</p>
             <ol className="max-h-96 space-y-4 overflow-y-auto">

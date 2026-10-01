@@ -331,7 +331,7 @@ export function CameraRecorder({
           muted
           autoPlay
           playsInline
-          className={`aspect-[3/4] max-h-[420px] w-full -scale-x-100 object-contain ${stage === "preview" ? "hidden" : ""}`}
+          className={`aspect-[3/4] max-h-[min(420px,55svh)] w-full -scale-x-100 object-contain ${stage === "preview" ? "hidden" : ""}`}
         />
         {stage === "preview" && (
           <video
@@ -339,7 +339,7 @@ export function CameraRecorder({
             src={url}
             controls
             playsInline
-            className="aspect-[3/4] max-h-[420px] w-full object-contain"
+            className="aspect-[3/4] max-h-[min(420px,55svh)] w-full object-contain"
           />
         )}
         {stage === "idle" && (
@@ -396,7 +396,7 @@ export function CameraRecorder({
           </p>
         </div>
       )}
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         {stage === "idle" && (
           <button
             disabled={pending}
@@ -428,7 +428,7 @@ export function CameraRecorder({
             <button
               disabled={pending}
               onClick={enableCamera}
-              className="rounded-xl border border-slate-300 px-5 py-3 text-sm disabled:opacity-50"
+              className="touch-target rounded-xl border border-slate-300 px-5 py-3 text-sm disabled:opacity-50"
             >
               Retake
             </button>
