@@ -52,7 +52,10 @@ default allowed browser origin. API docs are at http://localhost:8000/api/docs.
 1. Sign in. Select **Create client**, enter a name and phone number, and create the process.
 2. Copy the generated link. It is shown only once; send it manually through WhatsApp.
    For testing, open it in another browser tab or private window on the same computer.
-3. Enter the applicant's name, birth date, passport number, and phone number.
+3. Enter the applicant's name, birth date, and passport number. The phone number
+   is prefilled from the operator's invitation and cannot be edited by the applicant.
+   Contact the operator if it is incorrect. The server rejects a different number
+   and preserves the operator's saved value, allowing equivalent spacing and punctuation.
 4. Read and accept the privacy notice, then follow the recording instructions.
 5. Allow front-camera access and follow the 18-second randomized movement prompts.
    Recording stops automatically. No microphone is needed.

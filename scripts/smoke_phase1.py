@@ -141,13 +141,27 @@ with get_session_factory()() as db:
             expect(page.get_by_role("heading", name="Your details")).to_be_visible()
             page.get_by_label("Date of birth").fill("1990-06-15")
             page.get_by_label("Passport number").fill("TEST123456")
-            page.get_by_label("Phone number including country code").fill(
-                "+44 7700 900123"
-            )
+            phone = page.get_by_label("Phone number including country code")
+            expect(phone).to_have_value("+44 7700 900123")
+            expect(phone).to_have_attribute("readonly", "")
+            phone.press("End")
+            phone.press("Backspace")
+            expect(phone).to_have_value("+44 7700 900123")
+            # Simulate bypassing the read-only field; the server must still reject changes.
+            phone.evaluate("input => { input.value = '+44 7700 900999'; }")
+            page.get_by_role("button", name="Continue", exact=True).click()
+            expect(
+                page.get_by_role("alert").filter(
+                    has_text="This phone number does not match your invitation"
+                )
+            ).to_be_visible()
+            expect(page.get_by_role("heading", name="Your details")).to_be_visible()
+            expect(phone).to_have_value("+44 7700 900123")
             page.get_by_role("button", name="Continue", exact=True).click()
             expect(
                 page.get_by_role("heading", name="Your privacy and consent")
             ).to_be_visible()
+            print("PASS: prefilled read-only phone, tampering rejected, correct retry accepted", flush=True)
             page.get_by_role("checkbox").check()
             page.get_by_role("button", name="Agree and continue").click()
             page.get_by_role("button", name="Continue to camera").click()

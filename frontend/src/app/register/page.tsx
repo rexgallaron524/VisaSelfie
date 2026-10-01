@@ -272,11 +272,18 @@ export default function RegisterPage() {
                   name="phone_number"
                   type="tel"
                   autoComplete="tel"
+                  value={state?.phone_number ?? ""}
+                  readOnly
+                  aria-describedby="phone-number-help"
                   required
                   minLength={7}
                   maxLength={32}
                   className="field-input"
                 />
+                <p id="phone-number-help" className="mt-2 text-sm text-slate-500">
+                  This number was provided by the operator who invited you and cannot be
+                  changed here. If it is incorrect, contact your operator.
+                </p>
               </div>
               <button disabled={pending} className="primary-button w-full">
                 {pending ? "Saving…" : "Continue"}

@@ -110,6 +110,7 @@ class ProcessDetail(ProcessSummary):
 
 class PublicState(BaseModel):
     full_name: str
+    phone_number: str
     registered: bool
     consent_accepted: bool
     expires_at: datetime

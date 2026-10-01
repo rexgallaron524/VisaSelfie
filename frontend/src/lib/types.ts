@@ -58,6 +58,7 @@ export interface ProcessDetail extends ClientProcess {
 }
 export interface PublicState {
   full_name: string;
+  phone_number: string;
   registered: boolean;
   consent_accepted: boolean;
   expires_at: string;

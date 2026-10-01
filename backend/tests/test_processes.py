@@ -302,6 +302,77 @@ def test_applicant_cannot_change_other_process_or_admin_read(client, db):
     )
 
 
+def test_invitation_returns_operator_phone_only_with_valid_link(client, db):
+    issued, headers = create(client)
+    client.cookies.clear()
+    response = client.post("/api/public/open", headers=headers)
+    assert response.status_code == 200
+    assert response.json()["phone_number"] == "+44 7700 900123"
+    assert response.headers["cache-control"] == "no-store"
+    for invalid in [{}, {"Authorization": "Bearer " + "x" * 32}]:
+        response = client.post("/api/public/open", headers=invalid)
+        assert response.status_code == 404
+        assert "+44 7700 900123" not in response.text
+    link = db.scalar(select(RegistrationLink))
+    link.expires_at = utcnow() - timedelta(seconds=1)
+    db.commit()
+    response = client.post("/api/public/open", headers=headers)
+    assert response.status_code == 410
+    assert "+44 7700 900123" not in response.text
+
+
+@pytest.mark.parametrize("phone", ["+44 7700 900123", "+44(7700)-900123", "447700900123"])
+def test_registration_preserves_operator_phone_with_equivalent_formatting(client, db, phone):
+    issued, headers = create(client)
+    response = client.post(
+        "/api/public/register",
+        headers=headers,
+        json={
+            "full_name": "Applicant Updated Name",
+            "phone_number": phone,
+            "date_of_birth": "1990-06-15",
+            "passport_number": "TEST12345",
+        },
+    )
+    assert response.status_code == 204
+    db.expire_all()
+    process = db.get(ClientProcess, uuid.UUID(issued["process_id"]))
+    assert process.phone_number == "+44 7700 900123"
+    assert process.full_name == "Applicant Updated Name"
+    assert process.status == "registered"
+
+
+@pytest.mark.parametrize("phone", ["+44 7700 900999", "+33 7700 900123", "7700900123"])
+def test_registration_rejects_phone_changes_without_saving_any_details(client, db, phone):
+    issued, headers = create(client)
+    process = db.get(ClientProcess, uuid.UUID(issued["process_id"]))
+    previous_status, previous_updated = process.status, aware(process.updated_at)
+    response = client.post(
+        "/api/public/register",
+        headers=headers,
+        json={
+            "full_name": "Should Not Be Saved",
+            "phone_number": phone,
+            "date_of_birth": "1990-06-15",
+            "passport_number": "TEST12345",
+        },
+    )
+    assert response.status_code == 422
+    assert "does not match your invitation" in response.json()["detail"]
+    assert process.phone_number not in response.text
+    db.expire_all()
+    assert process.phone_number == "+44 7700 900123"
+    assert process.full_name == "Test Applicant"
+    assert process.date_of_birth is None
+    assert process.passport_number is None
+    assert process.status == previous_status
+    assert aware(process.updated_at) == previous_updated
+    assert db.scalar(select(AuditLog).where(AuditLog.action == "client.registered")) is None
+    assert db.scalar(select(RegistrationLink)).used_at is None
+    # A rejected request does not consume the invitation or prevent a correct retry.
+    register(client, headers)
+
+
 def test_registration_validates_and_redacts_invalid_values(client):
     _, headers = create(client)
     payload = {

@@ -191,6 +191,7 @@ def open_link(request: Request, db: Database, authorization: Authorization = Non
         audit(db, process, "link.opened", actor="applicant", actor_id=process.id)
     result = PublicState(
         full_name=process.full_name,
+        phone_number=process.phone_number,
         expires_at=link.expires_at,
         registered=process.date_of_birth is not None,
         consent_accepted=consent_for(db, process.id) is not None,
@@ -208,7 +209,13 @@ def register(payload: Registration, db: Database, authorization: Authorization =
         raise HTTPException(
             409, "Registration is already confirmed. Contact your operator to correct it."
         )
-    for key, value in payload.model_dump().items():
+    if re.sub(r"\D", "", payload.phone_number) != re.sub(r"\D", "", process.phone_number):
+        raise HTTPException(
+            422,
+            "This phone number does not match your invitation. Reload the page and try again. "
+            "If the displayed number is incorrect, contact the operator who sent you the link.",
+        )
+    for key, value in payload.model_dump(exclude={"phone_number"}).items():
         setattr(process, key, value)
     process.status = "registered"
     process.updated_at = utcnow()
