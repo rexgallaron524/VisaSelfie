@@ -150,8 +150,10 @@ not additional software on the client's runtime host:
 
 On Linux/macOS, use `.venv/bin/python`. The check creates two uniquely named stacks,
 random test credentials, a temporary internal certificate authority, and a loopback-only
-HTTPS port. It runs the browser workflow and uploads/downloads a real video larger
-than 4.5 MiB. It recreates containers with persisted volumes, verifies automatic API
+HTTPS port. It checks guided capture and rejection of non-face videos, including an
+upload larger than 4.5 MiB. It separately seeds synthetic legacy recordings for
+download/recovery checks; those fixtures do not prove liveness. It recreates
+containers with persisted volumes, verifies automatic API
 recovery after process termination, backs up database/video/certificate data, restores
 to fresh volumes, verifies the restored video byte-for-byte, and checks that an
 overwrite attempt is rejected. It removes only its own stacks and temporary files.
@@ -163,6 +165,35 @@ For a running deployment with a public certificate, the existing browser test ac
 The test uses a synthetic camera and cannot replace physical iOS/Android testing.
 
 ## Operational limits
+
+### Optional database management UI
+
+Adminer is an optional container, bound to the Docker host's loopback interface.
+For a Windows VPS, open its URL in the browser inside your Remote Desktop session.
+It is not routed through Caddy or published on the application domain.
+
+```powershell
+docker compose -f compose.yaml -f compose.production.yaml -f compose.database-ui.yaml --profile tools up -d --no-deps database-ui
+```
+
+Open `http://127.0.0.1:8081`. Choose **PostgreSQL**, server **db**, and use
+`POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` from your private `.env`.
+These are database credentials, separate from the Visa Selfie admin account.
+The UI allows browsing, editing, and SQL queries. Direct edits bypass application
+validation and audit events; use the application for normal client/video actions.
+Deleting a video database row does not delete its corresponding stored video file.
+
+Stop the UI when finished:
+
+```powershell
+docker compose -f compose.yaml -f compose.production.yaml -f compose.database-ui.yaml stop database-ui
+```
+
+For local development, omit `-f compose.production.yaml` from these commands.
+The UI has no automatic restart policy; start it explicitly when needed.
+Image reference: [official Adminer Docker image](https://hub.docker.com/_/adminer).
+
+### Server operation
 
 The supplied setup is a single-server deployment. Persistent volumes are not a backup.
 An unhealthy container is reported by health checks; Docker's restart policy restarts

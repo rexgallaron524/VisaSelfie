@@ -174,6 +174,15 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
         <div className="space-y-6">
           <section className="rounded-2xl border border-slate-200 bg-white p-6">
             <h2 className="text-lg font-semibold">Facial video</h2>
+            {video && video.status !== "deleted" && (
+              <div className="my-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-950">
+                <p className="font-semibold">
+                  {video.assessment?.passed ? "Guided checks passed — manual review required" : "No automated assessment for this recording"}
+                </p>
+                <p className="mt-2">Identity and liveness are not verified. Review for face coverings, photo/video replay and other suspicious signs before accepting.</p>
+                {video.assessment && <p className="mt-2">Checked lighting, one face, framing, sharpness and the requested movement sequence.</p>}
+              </div>
+            )}
             {!video ? (
               <p className="mt-4 text-sm text-slate-500">
                 Waiting for the applicant to submit their recording.

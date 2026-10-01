@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { apiRequest, ApiError } from "@/lib/api";
+import type { RecordingChallenge, VideoAssessment } from "@/lib/types";
 
 interface Props {
   token: string;
@@ -34,6 +35,32 @@ export function CameraRecorder({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [progress, setProgress] = useState<number | null>(null);
+  const [challenge, setChallenge] = useState<RecordingChallenge | null>(null);
+  const [assessment, setAssessment] = useState<VideoAssessment | null>(null);
+  const [lightingHint, setLightingHint] = useState("");
+
+  useEffect(() => {
+    if (stage !== "ready" && stage !== "recording") return;
+    const canvas = document.createElement("canvas");
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    const interval = setInterval(() => {
+      if (!ctx || !live.current || live.current.readyState < 2) return;
+      ctx.drawImage(live.current, 0, 0, 64, 64);
+      const pixels = ctx.getImageData(0, 0, 64, 64).data;
+      let sum = 0;
+      for (let i = 0; i < pixels.length; i += 4)
+        sum += 0.2126 * pixels[i] + 0.7152 * pixels[i + 1] + 0.0722 * pixels[i + 2];
+      const brightness = sum / (64 * 64);
+      setLightingHint(brightness < 45
+        ? "The camera view looks dark. Move toward a light source."
+        : brightness > 215
+          ? "The camera view looks too bright. Move away from direct glare."
+          : "Keep light in front of your face. Face framing and quality are checked after submission.");
+    }, 500);
+    return () => clearInterval(interval);
+  }, [stage]);
 
   function releaseCamera() {
     stream.current?.getTracks().forEach((track) => track.stop());
@@ -68,6 +95,8 @@ export function CameraRecorder({
     setPending(true);
     setError("");
     setBlob(null);
+    setAssessment(null);
+    setChallenge(null);
     setUrl("");
     setStage("idle");
     if (previewUrl.current) {
@@ -134,11 +163,12 @@ export function CameraRecorder({
     setError("");
     setSeconds(0);
     try {
-      await apiRequest<void>("/public/recording", {
+      const session = await apiRequest<RecordingChallenge>("/public/recording", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!mounted.current || !stream.current) return;
+      setChallenge(session);
       const mime = [
         "video/webm;codecs=vp8",
         "video/webm;codecs=vp9",
@@ -171,12 +201,12 @@ export function CameraRecorder({
         releaseCamera();
         if (!mounted.current) return;
         const elapsed = (performance.now() - started) / 1000;
-        if (failed || elapsed < 3 || !bytes || bytes > maxBytes) {
+        if (failed || elapsed < session.duration_seconds - 0.5 || !bytes || bytes > maxBytes) {
           setStage("idle");
           setError(
             bytes > maxBytes
               ? "Recording is too large. Please try a shorter video."
-              : "Please record at least 3 seconds and try again.",
+              : "Complete all the guided prompts without leaving this page. Please try again.",
           );
           return;
         }
@@ -194,7 +224,7 @@ export function CameraRecorder({
       timer.current = setInterval(() => {
         const elapsed = (performance.now() - started) / 1000;
         setSeconds(Math.floor(elapsed));
-        if (elapsed >= maxSeconds - 0.25 && mediaRecorder.state === "recording")
+        if (elapsed >= Math.min(maxSeconds, session.duration_seconds) && mediaRecorder.state === "recording")
           mediaRecorder.stop();
       }, 200);
     } catch (e) {
@@ -214,15 +244,17 @@ export function CameraRecorder({
   }
 
   function submit() {
-    if (!blob) return;
+    if (!blob || !challenge) return;
     setPending(true);
     setError("");
+    setAssessment(null);
     setProgress(0);
     const xhr = new XMLHttpRequest();
     upload.current = xhr;
     xhr.open("POST", "/api/public/video");
     xhr.setRequestHeader("Authorization", `Bearer ${token}`);
     xhr.setRequestHeader("Content-Type", blob.type);
+    xhr.setRequestHeader("X-Recording-Challenge", challenge.id);
     xhr.timeout = 180000;
     xhr.upload.onprogress = (event) => {
       if (event.lengthComputable)
@@ -245,7 +277,12 @@ export function CameraRecorder({
       if (!mounted.current) return;
       let message = "Submission failed. Please retry.";
       try {
-        message = JSON.parse(xhr.responseText).detail ?? message;
+        const detail = JSON.parse(xhr.responseText).detail;
+        if (typeof detail === "string") message = detail;
+        else if (detail?.assessment) {
+          setAssessment(detail.assessment);
+          message = detail.message;
+        }
       } catch {
         /* Non-JSON proxy response. */
       }
@@ -265,6 +302,17 @@ export function CameraRecorder({
     xhr.send(blob);
   }
 
+  let prompt = "Face forward with eyes open and your mouth relaxed.";
+  if (challenge && seconds >= challenge.baseline_seconds) {
+    const offset = seconds - challenge.baseline_seconds;
+    const action = challenge.actions[Math.floor(offset / challenge.action_seconds)];
+    prompt = action
+      ? offset % challenge.action_seconds >= challenge.action_seconds - 1
+        ? "Face forward again, open your eyes and relax your mouth."
+        : action.instruction
+      : "Stay facing forward. Finishing your recording…";
+  }
+
   return (
     <div>
       <h2 className="text-2xl font-semibold">
@@ -275,7 +323,7 @@ export function CameraRecorder({
       <p className="my-3 text-sm leading-6 text-slate-500">
         {stage === "preview"
           ? "Check that your face is clear and fully visible. Retake if needed, or confirm to submit."
-          : `Look directly at the camera and keep your face in the frame. Record for 3–${maxSeconds} seconds. Audio is not recorded.`}
+          : "Keep your whole face visible. Follow the 18-second sequence of prompts; recording stops automatically. Audio is not recorded."}
       </p>
       <div className="relative my-5 overflow-hidden rounded-2xl bg-slate-950">
         <video
@@ -304,10 +352,29 @@ export function CameraRecorder({
             role="status"
             className="absolute top-4 left-4 rounded-full bg-red-600 px-3 py-1 text-sm text-white"
           >
-            ● {seconds}s / {maxSeconds}s
+            ● {seconds}s / {challenge?.duration_seconds ?? 18}s
           </span>
         )}
       </div>
+      {(stage === "ready" || stage === "recording") && (
+        <p className="my-3 text-sm text-slate-600">{lightingHint}</p>
+      )}
+      {stage === "recording" && (
+        <p role="status" aria-live="polite" className="my-4 rounded-xl bg-teal-50 p-4 font-semibold text-teal-900">
+          {prompt}
+        </p>
+      )}
+      {assessment && (
+        <ul aria-label="Recording feedback" className="my-4 space-y-2 text-sm text-red-800">
+          {assessment.checks.filter(check => !check.passed).map(check => (
+            <li key={check.code}>{check.message}</li>
+          ))}
+        </ul>
+      )}
+      <p className="my-3 text-xs leading-5 text-slate-500">
+        These guided checks help assess recording quality. Your operator will review the video.
+        If you cannot perform a movement, contact your operator for assistance.
+      </p>
       {error && (
         <p
           role="alert"
@@ -350,11 +417,10 @@ export function CameraRecorder({
         )}
         {stage === "recording" && (
           <button
-            disabled={seconds < 3}
             onClick={() => recorder.current?.stop()}
             className="primary-button w-full"
           >
-            Stop recording{seconds < 3 ? " (minimum 3 seconds)" : ""}
+            Cancel recording
           </button>
         )}
         {stage === "preview" && (
@@ -367,7 +433,7 @@ export function CameraRecorder({
               Retake
             </button>
             <button
-              disabled={pending}
+              disabled={pending || assessment?.passed === false}
               onClick={submit}
               className="primary-button flex-1"
             >

@@ -18,6 +18,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import urllib.error
 import urllib.request
 import uuid
 from pathlib import Path
@@ -37,6 +38,8 @@ def run(args, *, env, input=None, check=True, timeout=600):
         env=env,
         input=input,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         capture_output=True,
         timeout=timeout,
     )
@@ -90,6 +93,7 @@ def main():
         encoding="utf-8",
     )
     env = os.environ.copy()
+    env["PYTHONIOENCODING"] = "utf-8"
     # Prevent the caller's shell from overriding the isolated env file.
     for key in [
         "POSTGRES_USER",
@@ -208,7 +212,7 @@ def main():
         }
         result = run([sys.executable, "scripts/smoke_phase1.py"], env=smoke_env)
         print(result.stdout, end="", flush=True)
-        # Real >4.5 MB video through gateway, Next.js, validation, and S3.
+        # A large non-face upload must be rejected. Seed it separately for storage/recovery checks.
         password = secrets.token_urlsafe(24)
         remote(
             projects[0],
@@ -235,6 +239,7 @@ with get_session_factory()() as db:
             if video is not None:
                 data = video
                 headers["Content-Type"] = "video/mp4"
+                headers["X-Recording-Challenge"] = challenge_id
             if bearer:
                 headers["Authorization"] = f"Bearer {bearer}"
             req = urllib.request.Request(base + path, data=data, headers=headers)
@@ -271,7 +276,7 @@ with get_session_factory()() as db:
             {"accepted": True, "version": state["consent_version"]},
             token,
         )
-        request("/api/public/recording", {}, token)
+        challenge_id = json.loads(request("/api/public/recording", {}, token))["id"]
         video = base64.b64decode(
             remote(
                 projects[0],
@@ -281,22 +286,65 @@ from pathlib import Path
 with tempfile.TemporaryDirectory() as directory:
     path = Path(directory) / 'large.mp4'
     subprocess.run(['ffmpeg', '-loglevel', 'error', '-f', 'lavfi', '-i',
-        'testsrc2=size=640x480:rate=24', '-t', '8', '-c:v', 'libx264',
+        'testsrc2=size=640x480:rate=24', '-t', '18', '-c:v', 'libx264',
         '-preset', 'ultrafast', '-b:v', '8M', '-minrate', '8M', '-maxrate', '8M',
         '-bufsize', '8M', '-x264-params', 'nal-hrd=cbr:filler=1',
         '-pix_fmt', 'yuv420p', '-an', '-movflags', '+faststart', str(path)],
         check=True, timeout=60)
+    import shutil
+    shutil.copyfile(path, '/tmp/visaselfie-large-test.mp4')
     print(base64.b64encode(path.read_bytes()).decode())
 """,
             )
         )
         assert 4.5 * 1024 * 1024 < len(video) < 30 * 1024 * 1024
-        request("/api/public/video", bearer=token, video=video)
+        remote(
+            projects[0],
+            f"""
+from datetime import timedelta
+from app.core.database import get_session_factory
+from app.core.security import utcnow
+from app.processes.models import RecordingChallenge
+import uuid
+with get_session_factory()() as db:
+    db.get(RecordingChallenge, uuid.UUID({challenge_id!r})).created_at = utcnow() - timedelta(seconds=20)
+    db.commit()
+""",
+        )
+        try:
+            request("/api/public/video", bearer=token, video=video)
+            raise AssertionError("Synthetic non-face video was accepted")
+        except urllib.error.HTTPError as error:
+            assert error.code == 422
+            assert not json.load(error)["detail"]["assessment"]["passed"]
+        remote(
+            projects[0],
+            f"""
+import uuid
+from pathlib import Path
+from app.core.database import get_session_factory
+from app.core.config import get_settings
+from app.processes.models import ClientProcess, VideoSubmission
+from app.storage import ObjectStore
+process_id = uuid.UUID({issued["process_id"]!r})
+path = Path('/tmp/visaselfie-large-test.mp4')
+key = f'videos/{{process_id}}/synthetic-large.mp4'
+store = ObjectStore(get_settings())
+with path.open('rb') as file:
+    store.put(key, file, path.stat().st_size, 'video/mp4')
+with get_session_factory()() as db:
+    db.add(VideoSubmission(client_process_id=process_id, storage_key=key,
+        original_filename='recording.mp4', mime_type='video/mp4', file_size=path.stat().st_size, duration=18))
+    db.get(ClientProcess, process_id).status = 'submitted'
+    db.commit()
+path.unlink()
+""",
+        )
         video_path = f"/api/admin/processes/{issued['process_id']}/video"
         video_hash = hashlib.sha256(video).digest()
         assert hashlib.sha256(request(video_path)).digest() == video_hash
         print(
-            f"PASS: {len(video) / 1024 / 1024:.1f} MiB validated video upload and authenticated download",
+            f"PASS: {len(video) / 1024 / 1024:.1f} MiB non-face upload rejected; seeded video downloaded for recovery checks",
             flush=True,
         )
         marker = secrets.token_hex(32)

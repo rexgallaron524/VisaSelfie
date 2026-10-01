@@ -8,7 +8,13 @@ from sqlalchemy import select
 
 from app.audit.models import AuditLog
 from app.core.security import hash_token, utcnow
-from app.processes.models import ClientProcess, ConsentRecord, RegistrationLink, VideoSubmission
+from app.processes.models import (
+    ClientProcess,
+    ConsentRecord,
+    RecordingChallenge,
+    RegistrationLink,
+    VideoSubmission,
+)
 from app.processes.schemas import CONSENT_VERSION
 from app.processes.services import aware
 from app.storage import get_store
@@ -53,7 +59,19 @@ def store(client, monkeypatch):
     store = MemoryStore()
     client.app.dependency_overrides[get_store] = lambda: store
     # Multimedia decoding is exercised with real recordings by the Docker browser test.
-    monkeypatch.setattr("app.processes.routes.inspect_video", lambda *args: 4.0)
+    monkeypatch.setattr("app.processes.routes.inspect_video", lambda *args: 18.0)
+    # Lifecycle tests isolate media inference. Dedicated assessment tests cover its policy.
+    monkeypatch.setattr(
+        "app.processes.routes.assess_video",
+        lambda *args: {
+            "passed": True,
+            "status": "guided_checks_passed",
+            "version": "guided-v1",
+            "liveness": "not_verified",
+            "manual_review_required": True,
+            "checks": [{"code": "test_stub", "passed": True, "message": "Test fixture"}],
+        },
+    )
     return store
 
 
@@ -98,7 +116,12 @@ def prepare(client, headers):
         ).status_code
         == 204
     )
-    assert client.post("/api/public/recording", headers=headers).status_code == 204
+    response = client.post("/api/public/recording", headers=headers)
+    assert response.status_code == 200
+    headers["X-Recording-Challenge"] = response.json()["id"]
+    challenge = client.test_db.get(RecordingChallenge, uuid.UUID(response.json()["id"]))
+    challenge.created_at = utcnow() - timedelta(seconds=20)
+    client.test_db.commit()
 
 
 def upload(client, headers, data=b"test-video-bytes"):

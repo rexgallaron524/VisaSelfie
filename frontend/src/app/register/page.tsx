@@ -318,7 +318,8 @@ export default function RegisterPage() {
                 "Keep your whole face visible and remove sunglasses or face coverings.",
                 "Make sure only your face is in the frame.",
                 "Hold your phone steady and look directly at the front camera.",
-                `Record for 3–${state?.max_video_seconds ?? 30} seconds. You can preview and retake before submitting.`,
+                "Follow the 18-second guided prompts: close and open your eyes, open and close your mouth, and turn your head then face forward. The order changes each time.",
+                "Recording quality is checked after submission. You will receive retake instructions if needed; your operator reviews accepted videos.",
                 "If your browser asks, allow camera access. No microphone access is needed.",
               ].map((text, i) => (
                 <li key={text} className="flex gap-3">

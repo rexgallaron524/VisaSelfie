@@ -45,6 +45,7 @@ def remote(source, data):
         check=False,
         input=json.dumps(data),
         text=True,
+        encoding="utf-8",
         capture_output=True,
         cwd=ROOT,
     )
@@ -155,23 +156,63 @@ with get_session_factory()() as db:
             def record():
                 page.get_by_role("button", name="Start recording", exact=True).click()
                 expect(
-                    page.get_by_role("button", name="Stop recording", exact=True)
-                ).to_be_enabled(timeout=10000)
-                page.get_by_role("button", name="Stop recording", exact=True).click()
-                expect(
                     page.get_by_role("heading", name="Preview your recording")
-                ).to_be_visible()
+                ).to_be_visible(timeout=25000)
 
             record()
             page.get_by_role("button", name="Retake", exact=True).click()
             record()
-            page.get_by_role("button", name="Confirm and submit").click()
+            with page.expect_response("**/api/public/video", timeout=120000) as checked:
+                page.get_by_role("button", name="Confirm and submit").click()
+            assert checked.value.status == 422, checked.value.text()
+            assert checked.value.json()["detail"]["assessment"]["passed"] is False
+            expect(page.get_by_label("Recording feedback")).to_be_visible()
             expect(
-                page.get_by_role("heading", name="Recording submitted")
-            ).to_be_visible(timeout=60000)
+                page.get_by_role("button", name="Confirm and submit")
+            ).to_be_disabled()
+            expect(
+                page.get_by_role("button", name="Retake", exact=True)
+            ).to_be_enabled()
             print(
-                "PASS: mobile registration, consent, recording, retake, and upload",
+                "PASS: guided recording, retake, server rejection of a non-face camera feed, feedback",
                 flush=True,
+            )
+            # Seed a legacy synthetic video ONLY for admin/storage lifecycle checks.
+            # This is not a successful face/liveness verification or a production bypass.
+            encoded = page.evaluate("""async () => {
+                const video = document.querySelector('video[src]');
+                const blob = await (await fetch(video.src)).blob();
+                return await new Promise(resolve => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result.split(',')[1]);
+                    reader.readAsDataURL(blob);
+                });
+            }""")
+            remote(
+                """
+import base64, uuid
+from sqlalchemy import select
+from app.core.database import get_session_factory
+from app.core.config import get_settings
+from app.core.security import utcnow
+from app.processes.models import ClientProcess, RegistrationLink, VideoSubmission
+from app.storage import ObjectStore
+process_id = uuid.UUID(data['id'])
+key = f'videos/{process_id}/synthetic-test.webm'
+store = ObjectStore(get_settings())
+video = base64.b64decode(data['video'])
+with get_session_factory()() as db:
+    assert db.scalar(select(VideoSubmission).where(VideoSubmission.client_process_id == process_id)) is None
+    store.client.put_object(Bucket=store.bucket, Key=key, Body=video, ContentType='video/webm')
+    db.add(VideoSubmission(client_process_id=process_id, storage_key=key,
+        original_filename='recording.webm', mime_type='video/webm', file_size=len(video), duration=18))
+    db.get(ClientProcess, process_id).status = 'submitted'
+    link = db.scalar(select(RegistrationLink).where(RegistrationLink.client_process_id == process_id))
+    link.used_at = utcnow()
+    link.status = 'used'
+    db.commit()
+""",
+                {"id": process_id, "video": encoded},
             )
             assert not any(
                 issued["token"] in url for url in requested_urls if "/api/" in url
@@ -292,7 +333,7 @@ with get_session_factory()() as db:
             assert not errors, errors
             browser.close()
         print(
-            "PASS: mobile registration, consent, real recording/retake/upload, private S3, "
+            "PASS: guided capture and non-face rejection; seeded legacy video: private S3, "
             "admin playback/ranges/download/review/deletion, expired/replaced links."
         )
     finally:
@@ -304,7 +345,7 @@ from app.core.database import get_session_factory
 from app.core.config import get_settings
 from app.auth.models import AdminUser, AdminSession
 from app.audit.models import AuditLog
-from app.processes.models import ClientProcess, ConsentRecord, RegistrationLink, VideoSubmission
+from app.processes.models import ClientProcess, ConsentRecord, RecordingChallenge, RegistrationLink, VideoSubmission
 from app.storage import ObjectStore
 ids = [uuid.UUID(value) for value in data['processes']]
 admin_id = uuid.UUID(data['admin_id'])
@@ -316,7 +357,7 @@ with get_session_factory()() as db:
     for key in db.scalars(select(VideoSubmission.storage_key).where(
         VideoSubmission.client_process_id.in_(ids))):
         store.delete(key)
-    for model in [VideoSubmission, ConsentRecord, RegistrationLink]:
+    for model in [VideoSubmission, ConsentRecord, RecordingChallenge, RegistrationLink]:
         db.execute(delete(model).where(model.client_process_id.in_(ids)))
     db.execute(delete(AuditLog).where(or_(
         AuditLog.entity_id.in_(ids), AuditLog.actor_id == admin_id)))

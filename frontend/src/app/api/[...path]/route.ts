@@ -15,6 +15,7 @@ async function proxy(request: NextRequest) {
     "content-length",
     "cookie",
     "authorization",
+    "x-recording-challenge",
     "origin",
     "range",
     "user-agent",

@@ -52,6 +52,7 @@ export interface ProcessDetail extends ClientProcess {
     uploaded_at: string;
     deleted_at: string | null;
     status: string;
+    assessment: VideoAssessment | null;
   } | null;
   history: Activity[];
 }
@@ -64,4 +65,22 @@ export interface PublicState {
   consent_text: string;
   max_upload_bytes: number;
   max_video_seconds: number;
+}
+
+export interface VideoAssessment {
+  version: string;
+  passed: boolean;
+  status: string;
+  liveness: "not_verified";
+  manual_review_required: boolean;
+  checks: { code: string; passed: boolean; message: string }[];
+}
+
+export interface RecordingChallenge {
+  id: string;
+  expires_at: string;
+  duration_seconds: number;
+  baseline_seconds: number;
+  action_seconds: number;
+  actions: { key: string; instruction: string }[];
 }

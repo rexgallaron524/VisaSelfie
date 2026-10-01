@@ -1,7 +1,7 @@
 import uuid
 from datetime import date, datetime
 
-from sqlalchemy import Date, DateTime, Float, ForeignKey, String
+from sqlalchemy import JSON, Date, DateTime, Float, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -66,3 +66,17 @@ class VideoSubmission(Base):
     uploaded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     status: Mapped[str] = mapped_column(String(20), default="active")
+    assessment: Mapped[dict | None] = mapped_column(JSON)
+
+
+class RecordingChallenge(Base):
+    __tablename__ = "recording_challenges"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    client_process_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("client_processes.id"), unique=True
+    )
+    registration_link_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("registration_links.id"))
+    actions: Mapped[list] = mapped_column(JSON)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

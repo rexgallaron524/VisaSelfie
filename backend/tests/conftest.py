@@ -48,5 +48,6 @@ def client(db):
     app.dependency_overrides[get_db] = override_db
     limiter.reset()
     with TestClient(app, headers={"Origin": "http://testserver"}) as test_client:
+        test_client.test_db = db
         yield test_client
     limiter.reset()

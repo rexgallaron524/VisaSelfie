@@ -1,0 +1,13 @@
+# Optional management UI. Open its URL in a browser ON the Docker host (or via RDP).
+services:
+  database-ui:
+    image: adminer:6.1.1-standalone
+    profiles: [tools]
+    restart: "no"
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+    ports:
+      - "127.0.0.1:8081:8080"
+    depends_on:
+      db:
+        condition: service_healthy

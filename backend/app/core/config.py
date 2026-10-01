@@ -43,6 +43,8 @@ class Settings(BaseSettings):
     max_upload_bytes: int = Field(default=30 * 1024 * 1024, ge=1024, le=100 * 1024 * 1024)
     max_video_seconds: int = Field(default=30, ge=3, le=60)
     ffprobe_path: str = "ffprobe"
+    ffmpeg_path: str = "ffmpeg"
+    face_model_path: str = "models/face_landmarker.task"
 
     @field_validator("frontend_public_url")
     @classmethod

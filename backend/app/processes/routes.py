@@ -1,6 +1,7 @@
 import re
 import tempfile
 import uuid
+from datetime import timedelta
 from pathlib import Path
 from typing import Annotated
 
@@ -14,7 +15,20 @@ from app.audit.models import AuditLog
 from app.auth.dependencies import CurrentAdmin, Database
 from app.core.security import utcnow
 from app.limiter import limiter
-from app.processes.models import ClientProcess, ConsentRecord, RegistrationLink, VideoSubmission
+from app.processes.assessment import (
+    CHALLENGE_SECONDS,
+    RECORDING_SECONDS,
+    assess_video,
+    challenge_payload,
+    new_actions,
+)
+from app.processes.models import (
+    ClientProcess,
+    ConsentRecord,
+    RecordingChallenge,
+    RegistrationLink,
+    VideoSubmission,
+)
 from app.processes.schemas import (
     CONSENT_VERSION,
     ConsentInput,
@@ -28,6 +42,7 @@ from app.processes.schemas import (
 from app.processes.services import (
     applicant,
     audit,
+    aware,
     consent_for,
     inspect_video,
     issue_link,
@@ -229,22 +244,77 @@ def recording_allowed(db, process):
         raise HTTPException(409, "Complete registration and accept consent before recording.")
 
 
-@router.post("/public/recording", status_code=204)
-def recording(db: Database, authorization: Authorization = None):
-    process, _ = applicant(db, authorization)
+@router.post("/public/recording")
+@limiter.limit("6/minute")
+def recording(request: Request, db: Database, authorization: Authorization = None):
+    process, link = applicant(db, authorization)
     recording_allowed(db, process)
+    if request.app.state.settings.max_video_seconds < RECORDING_SECONDS:
+        raise HTTPException(503, "Guided recording is not configured. Contact your operator.")
+    challenge = db.scalar(
+        select(RecordingChallenge).where(RecordingChallenge.client_process_id == process.id)
+    )
+    if challenge is None:
+        challenge = RecordingChallenge(client_process_id=process.id)
+        db.add(challenge)
+    challenge.id = uuid.uuid4()
+    challenge.registration_link_id = link.id
+    challenge.actions = new_actions()
+    challenge.created_at = utcnow()
+    challenge.expires_at = min(
+        utcnow() + timedelta(seconds=CHALLENGE_SECONDS), aware(link.expires_at)
+    )
     process.status = "recording_started"
     process.updated_at = utcnow()
     audit(db, process, "recording.started", actor="applicant", actor_id=process.id)
     db.commit()
+    return challenge_payload(challenge)
 
 
-def finish_upload(db, authorization, store, path, size, mime, settings):
+def validate_challenge(db, process, link, challenge_id):
+    challenge = db.scalar(
+        select(RecordingChallenge).where(RecordingChallenge.client_process_id == process.id)
+    )
+    if (
+        not challenge
+        or str(challenge.id) != challenge_id
+        or challenge.registration_link_id != link.id
+    ):
+        raise HTTPException(409, "Recording instructions changed. Please retake your video.")
+    if aware(challenge.expires_at) <= utcnow():
+        raise HTTPException(409, "Recording session expired. Please retake your video.")
+    return challenge
+
+
+def finish_upload(db, authorization, store, path, size, mime, settings, challenge_id):
     process, link = applicant(db, authorization)
     recording_allowed(db, process)
     if process.status != "recording_started":
         raise HTTPException(409, "Start a recording before submitting.")
+    challenge = validate_challenge(db, process, link, challenge_id)
+    actions = list(challenge.actions)
+    if (utcnow() - aware(challenge.created_at)).total_seconds() < RECORDING_SECONDS - 1:
+        raise HTTPException(422, "Complete the full guided recording before submitting.")
+    # Do not hold a database row lock during expensive media processing.
+    db.rollback()
     duration = inspect_video(path, mime, settings)
+    if not RECORDING_SECONDS - 1 <= duration <= RECORDING_SECONDS + 1:
+        raise HTTPException(422, "Record the full 18-second guided sequence and try again.")
+    assessment = assess_video(path, actions, settings)
+    # Re-check expiry, consent, replacement, and concurrent submissions after inference.
+    process, link = applicant(db, authorization)
+    recording_allowed(db, process)
+    validate_challenge(db, process, link, challenge_id)
+    if not assessment["passed"]:
+        audit(db, process, "video.checks_failed", actor="applicant", actor_id=process.id)
+        db.commit()
+        raise HTTPException(
+            422,
+            detail={
+                "message": "Please retake your recording using the guidance below.",
+                "assessment": assessment,
+            },
+        )
     extension = "webm" if mime == "video/webm" else "mp4"
     key = f"videos/{process.id}/{uuid.uuid4()}.{extension}"
     try:
@@ -258,6 +328,7 @@ def finish_upload(db, authorization, store, path, size, mime, settings):
                 mime_type=mime,
                 file_size=size,
                 duration=duration,
+                assessment=assessment,
             )
         )
         process.status = "submitted"
@@ -281,8 +352,12 @@ def finish_upload(db, authorization, store, path, size, mime, settings):
 @limiter.limit("6/minute")
 async def upload(request: Request, db: Database, store: Store, authorization: Authorization = None):
     # Authenticate before accepting any body; release the lock while receiving bytes.
-    process, _ = await run_in_threadpool(applicant, db, authorization)
+    process, link = await run_in_threadpool(applicant, db, authorization)
     recording_allowed(db, process)
+    challenge_id = request.headers.get("x-recording-challenge", "")
+    if not challenge_id or len(challenge_id) > 36:
+        raise HTTPException(409, "Start a new guided recording before submitting.")
+    validate_challenge(db, process, link, challenge_id)
     db.rollback()
     settings = request.app.state.settings
     mime = request.headers.get("content-type", "").split(";")[0].lower()
@@ -312,6 +387,7 @@ async def upload(request: Request, db: Database, store: Store, authorization: Au
                 size,
                 mime,
                 settings,
+                challenge_id,
             )
         except (BotoCoreError, ClientError):
             raise HTTPException(

@@ -43,7 +43,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_origins=settings.allowed_origins,
         allow_credentials=True,
         allow_methods=["GET", "POST", "DELETE", "HEAD", "OPTIONS"],
-        allow_headers=["Authorization", "Content-Type", "Range"],
+        allow_headers=["Authorization", "Content-Type", "Range", "X-Recording-Challenge"],
     )
     app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=settings.forwarded_allow_ips)
 

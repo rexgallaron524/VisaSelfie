@@ -54,7 +54,8 @@ default allowed browser origin. API docs are at http://localhost:8000/api/docs.
    For testing, open it in another browser tab or private window on the same computer.
 3. Enter the applicant's name, birth date, passport number, and phone number.
 4. Read and accept the privacy notice, then follow the recording instructions.
-5. Allow front-camera access, record for 3–30 seconds, and stop. No microphone is needed.
+5. Allow front-camera access and follow the 18-second randomized movement prompts.
+   Recording stops automatically. No microphone is needed.
 6. Preview or retake, then select **Confirm and submit**. Keep the page open until
    the success confirmation appears. Interrupted uploads can be retried from the preview.
 7. Return to the admin client detail page and select **Refresh status**. Play or
@@ -185,7 +186,53 @@ is unchanged; already shared links retain their original hostname.
 
 Video deletion is manual in Phase 1. Operators must decide their retention schedule
 and handle backups accordingly. This demo collects recordings for human review; it
-does not perform automated face matching, liveness detection, or embassy submission.
+does not perform identity matching, certified liveness verification, or embassy submission.
+
+## Guided video checks
+
+The server evaluates the actual uploaded recording before storing it. It checks
+one detected face, landmark framing and minimum face size, facial-region exposure,
+sharpness, and a randomized sequence of eye closing/opening, mouth opening/closing,
+and head turning/returning forward. The browser also gives an advisory brightness
+hint; the server is authoritative. Failed checks return specific retake guidance
+without consuming the 48-hour link or saving the rejected video to object storage.
+If inference is unavailable, the video is not accepted. Busy/network failures can
+be retried from the preview; an expired five-minute recording session needs a retake.
+
+Prompts are bound to the registration link and a fresh server-issued recording ID.
+Retakes invalidate previous IDs; the server checks expiry and link status again
+after analysis. Existing submitted recordings remain viewable as unassessed legacy
+videos. Unfinished registrations must accept the updated consent notice.
+
+**Limits:** these are self-hosted quality and guided-motion heuristics, not certified
+presentation-attack detection (PAD). Matching replayed clips, virtual-camera injection,
+deepfakes and some photo manipulations can bypass them. Landmarks can be inferred over
+occlusions, so full framing does not prove the absence of masks or sunglasses. No
+identity comparison or demographic inference is performed. Results always say
+`liveness: not_verified` and require human review. Do not treat a pass as proof of a
+live person. Applicants unable to perform a prompt should contact their operator;
+there is no automatic bypass or unimplemented fallback upload route.
+
+The initial thresholds are uncalibrated demo defaults: face-region luminance 45–215,
+less than 45% very dark and 35% clipped bright pixels; Laplacian variance at least 25;
+face bounds at least 2.5% inside the frame and at least 96 × 110 pixels after resizing.
+At least 90% of sampled frames must contain one face, no sampled frame may contain
+multiple faces, and framing/exposure/sharpness must each pass on at least 85% of
+frames. Each action must transition neutral → action → neutral in its five-second
+window. Test and tune with consented recordings across skin tones, devices, lighting,
+accessibility needs and attack types before client acceptance. No accuracy/PAD
+certification claim is made by the automated tests.
+
+MediaPipe runs locally on the server, without sending applicant images to a third
+party. Docker downloads the versioned Google model during build and verifies its
+SHA-256. Raw frames and landmarks are temporary; only the outcome summary is retained
+with accepted videos. The pinned Python inference wheel currently requires an x86-64
+Linux container; ARM Linux deployment needs a separately tested inference build.
+One analysis runs per API process, with bounded frame sampling and a 90-second worker
+timeout. Capacity and real-device acceptance testing remain necessary.
+
+References: [Google MediaPipe Face Landmarker](https://ai.google.dev/edge/mediapipe/solutions/vision/face_landmarker/python)
+and [NIST's presentation-attack detection evaluation](https://www.nist.gov/news-events/news/2023/09/whats-wrong-picture-nist-face-analysis-program-helps-find-answers).
 
 ## Stop, restart, and troubleshoot
 
@@ -203,16 +250,19 @@ as well; do not discard populated volumes to reset credentials.
 
 ## Development and checks
 
-Backend: Python 3.12+, PostgreSQL, an S3-compatible service, and `ffprobe` from FFmpeg.
+Backend: Python 3.12+, PostgreSQL, an S3-compatible service, and `ffmpeg`/`ffprobe`.
 Frontend: Node.js 20.9+. Docker includes all runtime prerequisites. To run the API
 directly, copy `backend/.env.example` to `backend/.env`, configure your reachable
-database/S3 endpoints and credentials, and put `ffprobe` on PATH or set `FFPROBE_PATH`.
+database/S3 endpoints and credentials, and put both FFmpeg executables on PATH or
+set `FFMPEG_PATH` and `FFPROBE_PATH`. Run the model downloader below once; the default
+`FACE_MODEL_PATH` is `models/face_landmarker.task` relative to the backend directory.
 
 ```powershell
 py -3.12 -m venv .venv
 .\.venv\Scripts\python -m pip install -r backend/requirements.lock
 .\.venv\Scripts\python -m pip install -e './backend[dev]'
 cd backend
+..\.venv\Scripts\python download_face_model.py
 ..\.venv\Scripts\alembic upgrade head
 ..\.venv\Scripts\python -m app.storage
 ..\.venv\Scripts\uvicorn app.main:create_app --factory --reload --no-access-log --no-proxy-headers
@@ -247,8 +297,10 @@ development environment, and run from the root:
 .\.venv\Scripts\python scripts/smoke_phase1.py
 ```
 
-This records a synthetic camera stream in Chromium, exercises registration through
-deletion, checks unauthorized S3 access, and cleans up only its own disposable records.
+This records a synthetic non-face camera stream in Chromium and verifies server
+rejection and retake feedback. It then seeds a separate legacy synthetic video to
+check admin playback/deletion and unauthorized S3 access, and cleans up its own
+records. Seeded storage tests do not demonstrate successful live-face verification.
 Physical iOS/Android devices still need manual camera/permission testing over HTTPS.
 
 Runtime dependencies are pinned in `backend/requirements.lock` and

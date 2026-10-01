@@ -4,7 +4,7 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-CONSENT_VERSION = "2026-09-01"
+CONSENT_VERSION = "2026-09-30-video-checks"
 CONSENT_TEXT = (
     "I agree that the operator who sent me this link may collect my name, date of birth, "
     "passport number, phone number, and facial video to manage my visa verification process. "
@@ -13,7 +13,10 @@ CONSENT_TEXT = (
     "recorded for auditing. The operator can download or delete the video and retains it "
     "until it is no longer needed. I can contact the operator who invited me to ask about "
     "retention or request deletion. This service does not automatically submit my recording "
-    "to an embassy or visa authority. I understand and consent to this collection and use."
+    "to an embassy or visa authority. Automated checks evaluate lighting, face framing, "
+    "sharpness and prompted movements on our server. They do not verify my identity or "
+    "guarantee liveness; an administrator must review the recording. No facial identity "
+    "template is retained. I understand and consent to this collection and use."
 )
 
 
@@ -80,6 +83,7 @@ class VideoInfo(BaseModel):
     uploaded_at: datetime
     deleted_at: datetime | None
     status: str
+    assessment: dict | None = None
 
 
 class EventInfo(BaseModel):
