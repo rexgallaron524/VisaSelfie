@@ -1,38 +1,51 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7f9f9;
-  --foreground: #15282b;
+  --canvas: #080b12;
+  --surface: #111827;
+  --surface-soft: #182131;
+  --ink: #f8fafc;
+  --muted: #a8b3c5;
+  --line: #273449;
+  --brand: #4f8cff;
+  --brand-dark: #1d4ed8;
+  --brand-soft: #172a4d;
+  --accent: #8b5cf6;
+  --background: var(--canvas);
+  --foreground: var(--ink);
 }
 
+html { scroll-padding-block: 1rem; background: var(--canvas); }
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Segoe UI", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   overflow-wrap: anywhere;
 }
-
-html { scroll-padding-block: 1rem; }
 button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 input, select, button, textarea, fieldset { min-width: 0; }
 input, select, textarea { scroll-margin-block: 1rem; }
 video { max-width: 100%; }
 button:not(:disabled), a { cursor: pointer; }
-:focus-visible { outline: 3px solid #14b8a6; outline-offset: 4px; }
+:focus-visible { outline: 3px solid #79a8ff; outline-offset: 3px; }
 
 @layer components {
   .page-shell { padding-left: max(1rem, env(safe-area-inset-left)); padding-right: max(1rem, env(safe-area-inset-right)); }
   .touch-target { @apply inline-flex min-h-11 items-center justify-center; }
-  .field-label { @apply mb-2 block text-sm font-medium text-slate-700; }
-  .field-input { @apply block min-w-0 max-w-full w-full rounded-xl border border-slate-300 bg-white px-4 py-3.5 text-base text-slate-900 placeholder:text-slate-400 focus:border-teal-600 focus:outline-2 focus:outline-teal-600 disabled:opacity-60; }
-  .primary-button { @apply inline-flex min-h-11 max-w-full items-center justify-center gap-3 rounded-xl bg-teal-800 px-5 py-3.5 text-center text-sm font-semibold text-white transition hover:bg-teal-900 disabled:cursor-wait disabled:opacity-60; }
+  .field-label { @apply mb-2 block text-sm font-semibold text-[#d9e2f1]; }
+  .field-input { @apply block min-w-0 w-full rounded-xl border border-[#34435a] bg-[#0d1421] px-4 py-3.5 text-base text-[#f8fafc] shadow-[0_1px_2px_rgba(0,0,0,0.25)] placeholder:text-[#65738a] transition hover:border-[#50627d] focus:border-[#4f8cff] focus:outline-2 focus:outline-[#4f8cff] disabled:bg-[#171f2d] disabled:text-[#a8b3c5] disabled:opacity-100; color-scheme: dark; }
+  .primary-button { @apply inline-flex min-h-11 max-w-full items-center justify-center gap-3 rounded-xl bg-[#4f8cff] px-5 py-3.5 text-center text-sm font-bold text-white shadow-[0_8px_24px_rgba(79,140,255,0.24)] transition hover:bg-[#3978ed] disabled:cursor-wait disabled:opacity-60; }
+  .secondary-button { @apply inline-flex min-h-11 max-w-full items-center justify-center gap-2 rounded-xl border border-[#34435a] bg-[#111827] px-5 py-3 text-center text-sm font-semibold text-[#d9e2f1] transition hover:border-[#5b7090] hover:bg-[#182131] disabled:cursor-wait disabled:opacity-50; }
+  .surface-card { @apply rounded-2xl border border-[#273449] bg-[#111827] shadow-[0_18px_45px_rgba(0,0,0,0.22)]; }
+  .soft-panel { @apply rounded-2xl border border-[#2b3950] bg-[#121b2a]; }
+  .section-label { @apply text-xs font-bold tracking-[0.14em] text-[#79a8ff] uppercase; }
+  .page-title { @apply text-3xl font-semibold tracking-[-0.03em] text-[#f8fafc] sm:text-4xl; }
 }
 
 @media (min-width: 640px) {
   .page-shell { padding-left: max(1.5rem, env(safe-area-inset-left)); padding-right: max(1.5rem, env(safe-area-inset-right)); }
 }
-
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
 }

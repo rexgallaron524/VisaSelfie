@@ -41,7 +41,7 @@ export function LoginForm() {
     <form
       method="post"
       onSubmit={submit}
-      className="mt-9 space-y-5"
+      className="mt-9 space-y-5 rounded-2xl border border-[#2b3950] bg-[#111827]/95 p-5 shadow-[0_18px_50px_rgba(0,0,0,0.3)] sm:p-6"
       aria-busy={pending}
     >
       <div>
@@ -79,7 +79,7 @@ export function LoginForm() {
       {error && (
         <p
           role="alert"
-          className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+          className="rounded-xl border border-[#713744] bg-[#321923] px-4 py-3 text-sm text-[#ffabbc]"
         >
           {error}
         </p>
@@ -92,7 +92,7 @@ export function LoginForm() {
         {pending ? "Signing in…" : "Sign in to your workspace"}
         {!pending && <span aria-hidden="true">→</span>}
       </button>
-      <p className="text-center text-xs leading-5 text-slate-500">
+      <p className="text-center text-xs leading-5 text-[#8e9db2]">
         Administrator access only. Contact your operator if you need an account.
       </p>
     </form>

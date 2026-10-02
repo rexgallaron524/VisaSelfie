@@ -141,25 +141,41 @@ export default function RegisterPage() {
     "instructions",
     "camera",
   ].indexOf(step);
+  const stepNames = ["Your details", "Privacy & consent", "Before you record", "Facial video"];
   return (
-    <main className="page-shell mx-auto min-h-dvh max-w-xl py-4 sm:py-7">
-      <Brand />
+    <main className="page-shell mx-auto min-h-dvh max-w-6xl py-4 sm:py-7 lg:py-9">
+      <header className="flex items-center justify-between gap-4"><Brand /><span className="hidden rounded-full border border-[#314f7d] bg-[#172a4d] px-3 py-1.5 text-xs font-semibold text-[#9dbdff] sm:inline-flex">Private registration</span></header>
+      <div className={`mt-5 grid items-start gap-6 sm:mt-8 ${stepIndex >= 0 ? "lg:grid-cols-[17rem_minmax(0,42rem)] lg:justify-center xl:grid-cols-[19rem_minmax(0,45rem)]" : "mx-auto max-w-xl"}`}>
+        {stepIndex >= 0 && (
+          <aside className="soft-panel sticky top-8 hidden overflow-hidden p-6 lg:block">
+            <p className="section-label">Registration journey</p>
+            <ol className="mt-6 space-y-1">
+              {stepNames.map((name, index) => (
+                <li key={name} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm ${index === stepIndex ? "bg-[#1a2639] font-semibold text-[#f8fafc] shadow-sm" : index < stepIndex ? "text-[#8cb5ff]" : "text-[#7f8da2]"}`}>
+                  <span className={`grid size-7 shrink-0 place-items-center rounded-full text-xs font-bold ${index < stepIndex ? "bg-[#4f8cff] text-white" : index === stepIndex ? "bg-[#271f48] text-[#b8a4ff]" : "bg-[#202b3d] text-[#8190a6]"}`}>{index < stepIndex ? "✓" : index + 1}</span>
+                  {name}
+                </li>
+              ))}
+            </ol>
+            <div className="mt-7 border-t border-[#2b3950] pt-5"><p className="text-sm font-semibold text-[#d9e2f1]">Need help?</p><p className="mt-2 text-xs leading-5 text-[#8e9db2]">Contact the operator who sent you this private link.</p></div>
+          </aside>
+        )}
       <div
-        className="mt-5 min-w-0 rounded-2xl border border-slate-200 bg-white p-4 sm:mt-8 sm:p-8"
+        className="surface-card min-w-0 overflow-hidden p-5 sm:p-8 lg:p-9"
         ref={heading}
         tabIndex={-1}
         style={{ outline: "none" }}
       >
         {stepIndex >= 0 && (
-          <div className="mb-6">
-            <p className="mb-3 text-xs font-semibold tracking-wider text-teal-700">
+          <div className="mb-7 lg:hidden">
+            <div className="mb-3 flex items-center justify-between gap-3"><p className="section-label">
               STEP {stepIndex + 1} OF 4
-            </p>
+            </p><p className="text-xs font-semibold text-[#a8b3c5]">{stepNames[stepIndex]}</p></div>
             <div className="flex gap-2" aria-hidden="true">
               {[0, 1, 2, 3].map((n) => (
                 <span
                   key={n}
-                  className={`h-1 flex-1 rounded-full ${n <= stepIndex ? "bg-teal-700" : "bg-slate-100"}`}
+                  className={`h-1.5 flex-1 rounded-full ${n <= stepIndex ? "bg-[#4f8cff]" : "bg-[#273449]"}`}
                 />
               ))}
             </div>
@@ -171,7 +187,7 @@ export default function RegisterPage() {
         {step === "invalid" && (
           <>
             <h1 className="text-2xl font-semibold">This link isn’t valid</h1>
-            <p className="mt-4 text-sm leading-7 text-slate-600">
+            <p className="mt-4 text-sm leading-7 text-[#b8c4d6]">
               It may be incomplete or have been replaced. Please ask the
               operator who invited you for a new registration link.
             </p>
@@ -180,7 +196,7 @@ export default function RegisterPage() {
         {step === "expired" && (
           <>
             <h1 className="text-2xl font-semibold">Your link has expired</h1>
-            <p className="mt-4 text-sm leading-7 text-slate-600">
+            <p className="mt-4 text-sm leading-7 text-[#b8c4d6]">
               Registration links expire after 48 hours. Contact the operator who
               invited you to request a new link.
             </p>
@@ -190,12 +206,12 @@ export default function RegisterPage() {
           <>
             <div
               aria-hidden="true"
-              className="mb-5 grid size-14 place-items-center rounded-full bg-teal-50 text-2xl text-teal-700"
+              className="mb-5 grid size-14 place-items-center rounded-full bg-[#172a4d] text-2xl text-[#8cb5ff]"
             >
               ✓
             </div>
             <h1 className="text-2xl font-semibold">Recording submitted</h1>
-            <p className="mt-4 text-sm leading-7 text-slate-600">
+            <p className="mt-4 text-sm leading-7 text-[#b8c4d6]">
               Your recording has been received. Your operator can now review it.
               You can close this page.
             </p>
@@ -213,11 +229,12 @@ export default function RegisterPage() {
         )}
         {step === "registration" && (
           <>
-            <h1 className="text-2xl font-semibold">Your details</h1>
-            <p className="mt-3 text-sm leading-6 text-slate-500">
+            <p className="section-label mb-2">Applicant information</p>
+            <h1 className="text-3xl font-semibold tracking-[-0.03em]">Your details</h1>
+            <p className="mt-3 text-sm leading-6 text-[#a8b3c5]">
               Enter your details exactly as they appear on your passport.
             </p>
-            <form method="post" onSubmit={register} className="mt-6 space-y-5">
+            <form method="post" onSubmit={register} className="mt-7 space-y-5">
               <div>
                 <label htmlFor="full_name" className="field-label">
                   Full name
@@ -280,13 +297,13 @@ export default function RegisterPage() {
                   maxLength={32}
                   className="field-input"
                 />
-                <p id="phone-number-help" className="mt-2 text-sm text-slate-500">
+                <p id="phone-number-help" className="mt-2 text-sm text-[#a8b3c5]">
                   This number was provided by the operator who invited you and cannot be
                   changed here. If it is incorrect, contact your operator.
                 </p>
               </div>
-              <fieldset className="space-y-5 border-t border-slate-200 pt-5">
-                <legend className="px-1 text-sm font-semibold text-slate-700">Additional contact details (optional)</legend>
+              <fieldset className="soft-panel space-y-5 p-4 sm:p-5">
+                <legend className="px-2 text-sm font-semibold text-[#d9e2f1]">Additional contact details <span className="font-normal text-[#8e9db2]">(optional)</span></legend>
                 <div>
                   <label htmlFor="email" className="field-label">Email address</label>
                   <input id="email" name="email" type="email" autoComplete="email" maxLength={254} className="field-input" />
@@ -298,7 +315,7 @@ export default function RegisterPage() {
                 <div>
                   <label htmlFor="address" className="field-label">Residential address</label>
                   <textarea id="address" name="address" autoComplete="street-address" rows={3} maxLength={500} className="field-input resize-y" aria-describedby="address-help" />
-                  <p id="address-help" className="mt-2 text-sm text-slate-500">Include your street or neighbourhood, city and country.</p>
+                  <p id="address-help" className="mt-2 text-sm text-[#a8b3c5]">Include your street or neighbourhood, city and country.</p>
                 </div>
               </fieldset>
               <button disabled={pending} className="primary-button w-full">
@@ -309,16 +326,17 @@ export default function RegisterPage() {
         )}
         {step === "consent" && (
           <>
-            <h1 className="text-2xl font-semibold">Your privacy and consent</h1>
-            <p className="my-5 text-sm leading-7 text-slate-600">
+            <p className="section-label mb-2">Your control</p>
+            <h1 className="text-3xl font-semibold tracking-[-0.03em]">Your privacy and consent</h1>
+            <p className="my-6 rounded-2xl border border-[#2b3950] bg-[#121b2a] p-5 text-sm leading-7 text-[#b8c4d6]">
               {state?.consent_text}
             </p>
             <form method="post" onSubmit={consent}>
-              <label className="flex min-h-11 items-start gap-3 rounded-xl border border-slate-200 p-4 text-sm leading-6">
+              <label className="flex min-h-11 items-start gap-3 rounded-xl border border-[#34435a] p-4 text-sm leading-6 transition hover:bg-[#182131]">
                 <input
                   type="checkbox"
                   required
-                  className="mt-1 size-5 shrink-0 accent-teal-700"
+                  className="mt-1 size-5 shrink-0 accent-[#4f8cff]"
                 />
                 I have read the privacy notice and consent to the collection and
                 use of my details and facial video.
@@ -331,11 +349,12 @@ export default function RegisterPage() {
         )}
         {step === "instructions" && (
           <>
-            <h1 className="text-2xl font-semibold">Before you record</h1>
-            <p className="my-4 text-sm text-slate-500">
+            <p className="section-label mb-2">Recording guide</p>
+            <h1 className="text-3xl font-semibold tracking-[-0.03em]">Before you record</h1>
+            <p className="my-4 text-sm text-[#a8b3c5]">
               A few simple steps for a clear recording.
             </p>
-            <ol className="space-y-4 text-sm leading-6 text-slate-700">
+            <ol className="mt-6 grid gap-3 text-sm leading-6 text-[#b8c4d6] sm:grid-cols-2">
               {[
                 "Find good lighting, with the light in front of you.",
                 "Keep your whole face visible and remove sunglasses or face coverings.",
@@ -345,8 +364,8 @@ export default function RegisterPage() {
                 "Recording quality is checked after submission. You will receive retake instructions if needed; your operator reviews accepted videos.",
                 "If your browser asks, allow camera access. No microphone access is needed.",
               ].map((text, i) => (
-                <li key={text} className="flex gap-3">
-                  <span className="grid size-6 shrink-0 place-items-center rounded-full bg-teal-50 text-xs text-teal-800">
+                <li key={text} className={`flex gap-3 rounded-xl border border-[#2b3950] bg-[#121b2a] p-4 ${i === 4 ? "sm:col-span-2" : ""}`}>
+                  <span className="grid size-7 shrink-0 place-items-center rounded-full bg-[#172a4d] text-xs font-bold text-[#8cb5ff]">
                     {i + 1}
                   </span>
                   {text}
@@ -379,13 +398,14 @@ export default function RegisterPage() {
         {error && (
           <p
             role="alert"
-            className="mt-5 rounded-xl bg-red-50 p-4 text-sm text-red-700"
+            className="mt-5 rounded-xl border border-[#713744] bg-[#321923] p-4 text-sm text-[#ffabbc]"
           >
             {error}
           </p>
         )}
       </div>
-      <p className="my-6 text-center text-xs leading-5 text-slate-400">
+      </div>
+      <p className="my-6 text-center text-xs leading-5 text-[#7f8da2]">
         Visa Selfie · Private registration
         <br />
         Need help? Contact the operator who sent you this link.

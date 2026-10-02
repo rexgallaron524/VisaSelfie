@@ -30,10 +30,11 @@ export default async function ClientsPage({
   }
   return (
     <>
-      <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 id="clients-top" tabIndex={-1} className="text-3xl font-semibold">Clients</h1>
-          <p className="mt-2 text-sm text-slate-500">
+          <p className="section-label mb-2">Management</p>
+          <h1 id="clients-top" tabIndex={-1} className="page-title">Clients</h1>
+          <p className="mt-2 text-sm text-[#a8b3c5]">
             {data.total} matching processes
           </p>
         </div>
@@ -41,7 +42,7 @@ export default async function ClientsPage({
           + Create client
         </Link>
       </div>
-      <form className="mb-5 grid items-end gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_minmax(0,16rem)_auto]">
+      <form className="surface-card mb-5 grid items-end gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:p-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,16rem)_auto]">
         <input type="hidden" name="page_size" value={pageSize} />
         <div className="min-w-0">
           <label htmlFor="q" className="field-label">
@@ -75,7 +76,7 @@ export default async function ClientsPage({
         </div>
         <button className="primary-button sm:col-span-2 lg:col-span-1">Filter</button>
       </form>
-      <section aria-label="Client list" className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+      <section aria-label="Client list" className="surface-card min-w-0 overflow-hidden">
         <ClientPagination position="top" page={page} pageSize={pageSize} total={data.total} query={query.toString()} />
         <ProcessTable processes={data.items} />
         <ClientPagination position="bottom" page={page} pageSize={pageSize} total={data.total} query={query.toString()} />

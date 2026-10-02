@@ -29,12 +29,12 @@ export function LogoutButton() {
       <button
         onClick={logout}
         disabled={pending || !hydrated}
-        className="touch-target rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-50 sm:px-4"
+        className="touch-target rounded-xl border border-white/15 px-3 py-2 text-sm font-semibold text-white/75 transition hover:bg-white/10 hover:text-white disabled:opacity-50 sm:px-4"
       >
         {pending ? "Signing out…" : "Sign out"}
       </button>
       {error && (
-        <p role="alert" className="mt-2 text-xs text-red-700">
+        <p role="alert" className="mt-2 text-xs text-red-200">
           Couldn’t sign out. Please retry.
         </p>
       )}

@@ -315,17 +315,18 @@ export function CameraRecorder({
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold">
+      <p className="section-label mb-2">Camera check</p>
+      <h2 className="text-3xl font-semibold tracking-[-0.03em]">
         {stage === "preview"
           ? "Preview your recording"
           : "Record your facial video"}
       </h2>
-      <p className="my-3 text-sm leading-6 text-slate-500">
+      <p className="my-3 text-sm leading-6 text-[#a8b3c5]">
         {stage === "preview"
           ? "Check that your face is clear and fully visible. Retake if needed, or confirm to submit."
           : "Keep your whole face visible. Follow the 18-second sequence of prompts; recording stops automatically. Audio is not recorded."}
       </p>
-      <div className="relative my-5 overflow-hidden rounded-2xl bg-slate-950">
+      <div className="relative my-6 overflow-hidden rounded-[1.5rem] bg-[#04070d] shadow-[0_18px_45px_rgba(0,0,0,0.4)] ring-4 ring-[#273449]">
         <video
           ref={live}
           muted
@@ -350,41 +351,41 @@ export function CameraRecorder({
         {stage === "recording" && (
           <span
             role="status"
-            className="absolute top-4 left-4 rounded-full bg-red-600 px-3 py-1 text-sm text-white"
+            className="absolute top-4 left-4 rounded-full bg-red-600 px-3 py-1.5 text-sm font-semibold text-white shadow-lg"
           >
             ● {seconds}s / {challenge?.duration_seconds ?? 18}s
           </span>
         )}
       </div>
       {(stage === "ready" || stage === "recording") && (
-        <p className="my-3 text-sm text-slate-600">{lightingHint}</p>
+        <p className="my-4 rounded-xl border border-[#2b3950] bg-[#121b2a] px-4 py-3 text-sm text-[#b8c4d6]">{lightingHint}</p>
       )}
       {stage === "recording" && (
-        <p role="status" aria-live="polite" className="my-4 rounded-xl bg-teal-50 p-4 font-semibold text-teal-900">
+        <p role="status" aria-live="polite" className="my-4 rounded-xl border border-[#4a3f7c] bg-[#271f48] p-4 font-semibold text-[#c5b6ff]">
           {prompt}
         </p>
       )}
       {assessment && (
-        <ul aria-label="Recording feedback" className="my-4 space-y-2 text-sm text-red-800">
+        <ul aria-label="Recording feedback" className="my-4 space-y-2 text-sm text-[#ffabbc]">
           {assessment.checks.filter(check => !check.passed).map(check => (
             <li key={check.code}>{check.message}</li>
           ))}
         </ul>
       )}
-      <p className="my-3 text-xs leading-5 text-slate-500">
+      <p className="my-4 text-xs leading-5 text-[#8e9db2]">
         These guided checks help assess recording quality. Your operator will review the video.
         If you cannot perform a movement, contact your operator for assistance.
       </p>
       {error && (
         <p
           role="alert"
-          className="my-4 rounded-xl bg-red-50 p-4 text-sm text-red-800"
+          className="my-4 rounded-xl border border-[#713744] bg-[#321923] p-4 text-sm text-[#ffabbc]"
         >
           {error}
         </p>
       )}
       {progress !== null && (
-        <div role="status" className="my-4 text-sm text-teal-800">
+        <div role="status" className="my-4 text-sm text-[#8cb5ff]">
           <p>
             {progress === 100
               ? "Checking and saving your recording…"
@@ -428,7 +429,7 @@ export function CameraRecorder({
             <button
               disabled={pending}
               onClick={enableCamera}
-              className="touch-target rounded-xl border border-slate-300 px-5 py-3 text-sm disabled:opacity-50"
+              className="secondary-button"
             >
               Retake
             </button>

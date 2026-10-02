@@ -17,9 +17,10 @@ export function LinkPanel({ link }: { link: IssuedLink }) {
     }
   }
   return (
-    <div className="min-w-0 rounded-xl border border-teal-200 bg-teal-50 p-4 sm:p-5">
-      <h2 className="font-semibold text-teal-900">Registration link ready</h2>
-      <p className="my-3 text-sm leading-6 text-teal-900">
+    <div className="min-w-0 rounded-2xl border border-[#314f7d] bg-[#111f37] p-5 sm:p-6">
+      <span className="mb-4 grid size-10 place-items-center rounded-xl bg-[#4f8cff] text-white" aria-hidden="true">✓</span>
+      <h2 className="font-semibold text-[#b9d0ff]">Registration link ready</h2>
+      <p className="my-3 text-sm leading-6 text-[#c5d0e2]">
         Copy this private link and send it to the applicant using WhatsApp. It
         can be used once and expires in 48 hours.
       </p>
@@ -41,7 +42,7 @@ export function LinkPanel({ link }: { link: IssuedLink }) {
           Select the link above and copy it manually.
         </p>
       )}
-      <p className="mt-3 text-xs text-teal-800">
+      <p className="mt-3 text-xs leading-5 text-[#9cabc0]">
         Expires <DateText value={link.expires_at} />. Copy it before leaving
         this page; it cannot be retrieved later.
       </p>

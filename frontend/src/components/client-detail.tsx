@@ -46,16 +46,17 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
   }
   return (
     <>
-      <Link href="/dashboard/clients" className="touch-target text-sm text-teal-700">
+      <Link href="/dashboard/clients" className="touch-target rounded-lg px-2 text-sm font-semibold text-[#8cb5ff] hover:bg-[#182641]">
         ← Clients
       </Link>
-      <div className="my-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="my-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0 flex-1">
-          <h1 className="mb-3 text-3xl font-semibold">{process.full_name}</h1>
+          <p className="section-label mb-2">Client process</p>
+          <h1 className="mb-3 text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">{process.full_name}</h1>
           <Status value={process.status} />
         </div>
         <button
-          className="touch-target shrink-0 rounded-lg border border-slate-300 px-4 py-2 text-sm"
+          className="secondary-button shrink-0"
           disabled={!hydrated}
           onClick={() => router.refresh()}
         >
@@ -65,7 +66,7 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
       {error && (
         <p
           role="alert"
-          className="mb-5 rounded-xl bg-red-50 p-4 text-sm text-red-700"
+          className="mb-5 rounded-xl border border-[#713744] bg-[#321923] p-4 text-sm text-[#ffabbc]"
         >
           {error}
         </p>
@@ -78,7 +79,7 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
               ? "Confirm video deletion"
               : "Confirm link replacement"
           }
-          className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-5"
+          className="mb-6 rounded-2xl border border-[#68451d] bg-[#2e2114] p-5"
         >
           <p className="text-sm leading-6">
             {confirmation === "delete"
@@ -96,18 +97,18 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
             <button
               disabled={pending || !hydrated}
               onClick={() => setConfirmation(null)}
-              className="touch-target px-4 text-sm"
+              className="secondary-button"
             >
               Cancel
             </button>
           </div>
         </div>
       )}
-      <div className="grid items-start gap-6 lg:grid-cols-2">
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(19rem,0.8fr)_minmax(26rem,1.2fr)]">
         <div className="min-w-0 space-y-6">
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
-            <h2 className="mb-5 text-lg font-semibold">Client information</h2>
-            <dl className="space-y-4 text-sm">
+          <section className="surface-card p-5 sm:p-6">
+            <p className="section-label mb-1">Profile</p><h2 className="mb-5 text-lg font-semibold">Client information</h2>
+            <dl className="grid min-w-0 grid-cols-1 gap-x-5 gap-y-4 text-sm sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
               {[
                 ["Full name", process.full_name],
                 [
@@ -123,19 +124,19 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
                 ["Alternative phone", process.alternative_phone_number ?? "Not provided"],
                 ["Residential address", process.address ?? "Not provided"],
               ].map(([label, value]) => (
-                <div key={label}>
-                  <dt className="text-xs text-slate-500">{label}</dt>
-                  <dd className="mt-1 whitespace-pre-line break-words">{value}</dd>
+                <div key={label} className="min-w-0">
+                  <dt className="text-xs font-medium text-[#8e9db2]">{label}</dt>
+                  <dd className="mt-1 whitespace-pre-line break-words font-medium text-[#d9e2f1]">{value}</dd>
                 </div>
               ))}
               <div>
-                <dt className="text-xs text-slate-500">Created</dt>
+                <dt className="text-xs font-medium text-[#8e9db2]">Created</dt>
                 <dd className="mt-1">
                   <DateText value={process.created_at} />
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-500">Consent</dt>
+                <dt className="text-xs font-medium text-[#8e9db2]">Consent</dt>
                 <dd className="mt-1">
                   {process.consent ? (
                     <>
@@ -151,13 +152,13 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
             </dl>
           </section>
           {!closed && (
-            <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
+            <section className="surface-card p-5 sm:p-6">
               {issued ? (
                 <LinkPanel link={issued} />
               ) : (
                 <>
                   <h2 className="font-semibold">Registration link</h2>
-                  <p className="my-3 text-sm text-slate-500">
+                  <p className="my-3 text-sm leading-6 text-[#a8b3c5]">
                     Expires <DateText value={process.link_expires_at} />. For
                     privacy, the original link cannot be retrieved. Generate a
                     replacement if you need to send it again.
@@ -175,10 +176,10 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
           )}
         </div>
         <div className="min-w-0 space-y-6">
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
-            <h2 className="text-lg font-semibold">Facial video</h2>
+          <section className="surface-card p-5 sm:p-6">
+            <p className="section-label mb-1">Submission</p><h2 className="text-lg font-semibold">Facial video</h2>
             {video && video.status !== "deleted" && (
-              <div className="my-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-950">
+              <div className="my-4 rounded-xl border border-[#68451d] bg-[#2e2114] p-4 text-sm text-[#f2cf9e]">
                 <p className="font-semibold">
                   {video.assessment?.passed ? "Guided checks passed — manual review required" : "No automated assessment for this recording"}
                 </p>
@@ -187,17 +188,17 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
               </div>
             )}
             {!video ? (
-              <p className="mt-4 text-sm text-slate-500">
+              <p className="mt-4 text-sm text-[#a8b3c5]">
                 Waiting for the applicant to submit their recording.
               </p>
             ) : video.status === "deleted" ? (
-              <p className="mt-4 text-sm text-slate-500">
+              <p className="mt-4 text-sm text-[#a8b3c5]">
                 Video deleted <DateText value={video.deleted_at} />. Audit
                 history has been retained.
               </p>
             ) : (
               <>
-                <p className="my-3 text-xs text-slate-500">
+                <p className="my-3 text-xs text-[#8e9db2]">
                   {video.duration.toFixed(1)} seconds ·{" "}
                   {(video.file_size / 1024 / 1024).toFixed(1)} MB ·{" "}
                   <DateText value={video.uploaded_at} />
@@ -210,7 +211,7 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
                         controls
                         playsInline
                         preload="metadata"
-                        className="aspect-[4/3] max-h-[60svh] w-full rounded-xl bg-slate-950 object-contain"
+                        className="aspect-[4/3] max-h-[60svh] w-full rounded-2xl bg-[#04070d] object-contain ring-4 ring-[#273449]"
                         onError={() =>
                           setError(
                             "Unable to load the video. Refresh your session and retry.",
@@ -219,7 +220,7 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
                       />
                     ) : (
                       <button
-                        className="mb-4 grid aspect-[4/3] max-h-[60svh] w-full place-items-center rounded-xl bg-slate-900 text-sm text-white"
+                        className="mb-4 grid aspect-[4/3] max-h-[60svh] w-full place-items-center rounded-2xl bg-[#090e18] text-sm font-semibold text-white shadow-inner ring-1 ring-[#273449] transition hover:bg-[#111b2b]"
                         disabled={!hydrated}
                         onClick={() => setPlaying(true)}
                       >
@@ -229,7 +230,7 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
                     <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-4">
                       <a
                         href={`/api${endpoint}/video?download=true`}
-                        className="touch-target text-sm font-medium text-teal-800 underline"
+                        className="touch-target text-sm font-medium text-[#8cb5ff] underline"
                       >
                         Download video
                       </a>
@@ -237,7 +238,7 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
                         <button
                           disabled={pending || !hydrated}
                           onClick={() => act("review")}
-                          className="touch-target text-sm font-medium text-teal-800 underline"
+                          className="touch-target text-sm font-medium text-[#8cb5ff] underline"
                         >
                           Mark reviewed
                         </button>
@@ -245,7 +246,7 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
                       <button
                         disabled={pending || !hydrated}
                         onClick={() => setConfirmation("delete")}
-                        className="touch-target text-sm font-medium text-red-700 underline"
+                        className="touch-target text-sm font-medium text-[#ff8fa6] underline"
                       >
                         Delete video
                       </button>
@@ -253,7 +254,7 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
                   </>
                 ) : (
                   <>
-                    <p className="my-4 text-sm text-amber-800">
+                    <p className="my-4 text-sm text-[#f5bd73]">
                       Deletion is pending. Video access is disabled until
                       deletion finishes.
                     </p>
@@ -269,14 +270,14 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
               </>
             )}
           </section>
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
-            <h2 className="mb-4 font-semibold">Process history</h2>
-            <p className="mb-4 text-xs text-slate-500">Latest 100 events</p>
+          <section className="surface-card p-5 sm:p-6">
+            <p className="section-label mb-1">Timeline</p><h2 className="mb-4 font-semibold">Process history</h2>
+            <p className="mb-4 text-xs text-[#8e9db2]">Latest 100 events</p>
             <ol className="max-h-96 space-y-4 overflow-y-auto">
               {process.history.map((event) => (
-                <li key={event.id} className="border-l-2 border-teal-100 pl-4">
+                <li key={event.id} className="border-l-2 border-[#4f8cff] pl-4">
                   <p className="text-sm">{readable(event.action)}</p>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-[#8e9db2]">
                     {readable(event.actor_type)} ·{" "}
                     <DateText value={event.created_at} />
                   </p>

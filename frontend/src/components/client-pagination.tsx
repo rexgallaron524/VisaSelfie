@@ -30,23 +30,23 @@ export function ClientPagination({ position, page, pageSize, total, query }: Pro
     items.push(n);
   });
   const button =
-    "touch-target size-11 shrink-0 rounded-lg border border-slate-300 text-sm text-teal-800 hover:bg-teal-50 sm:w-auto sm:px-3";
+    "touch-target size-11 shrink-0 rounded-lg border border-[#34435a] bg-[#111827] text-sm font-semibold text-[#8cb5ff] transition hover:bg-[#182641] sm:w-auto sm:px-3";
   const start = total ? (page - 1) * pageSize + 1 : 0;
   const end = Math.min(page * pageSize, total);
   return (
     <nav
       aria-label={`Client pagination ${position}`}
       aria-busy={pending}
-      className={`flex min-w-0 items-center gap-2 overflow-x-auto px-3 py-2.5 sm:px-4 ${position === "top" ? "border-b border-slate-200" : "border-t border-slate-200"}`}
+      className={`flex min-w-0 items-center gap-2 overflow-x-auto bg-[#0f1623] px-3 py-2.5 sm:px-4 ${position === "top" ? "border-b border-[#273449]" : "border-t border-[#273449]"}`}
     >
-      <p role="status" className="shrink-0 text-xs text-slate-600 sm:text-sm">
+      <p role="status" className="shrink-0 text-xs font-medium text-[#a8b3c5] sm:text-sm">
         <span className="sm:hidden">{total ? `${start}–${end} / ${total}` : "0 clients"}</span>
         <span className="hidden sm:inline">
           {total ? `Showing ${start}–${end} of ${total} clients` : "No clients to display"}
         </span>
       </p>
       <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-        <label htmlFor={`page-size-${position}`} className="sr-only sm:not-sr-only sm:text-sm sm:text-slate-600">
+        <label htmlFor={`page-size-${position}`} className="sr-only sm:not-sr-only sm:text-sm sm:text-[#a8b3c5]">
           Clients per page
         </label>
         <select
@@ -79,7 +79,7 @@ export function ClientPagination({ position, page, pageSize, total, query }: Pro
             href={url(item)}
             aria-label={`Page ${item}`}
             aria-current={item === page ? "page" : undefined}
-            className={`${button} ${item === page ? "border-teal-800 bg-teal-50 font-semibold" : "hidden sm:inline-flex"}`}
+            className={`${button} ${item === page ? "border-[#4f8cff] bg-[#172a4d]" : "hidden sm:inline-flex"}`}
           >
             {item}
           </Link>
@@ -93,7 +93,7 @@ export function ClientPagination({ position, page, pageSize, total, query }: Pro
             <span aria-hidden="true" className="sm:hidden">›</span><span className="hidden sm:inline">Next</span>
           </span>
         )}
-        <span className="hidden shrink-0 text-xs text-slate-500 lg:inline">Page {page} of {pages}</span>
+        <span className="hidden shrink-0 text-xs text-[#8e9db2] lg:inline">Page {page} of {pages}</span>
       </div>
     </nav>
   );

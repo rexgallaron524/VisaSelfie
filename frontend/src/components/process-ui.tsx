@@ -30,13 +30,15 @@ export function DateText({ value }: { value: string | null }) {
 }
 export function Status({ value }: { value: string }) {
   const color = ["submitted", "reviewed"].includes(value)
-    ? "bg-teal-50 text-teal-800"
+    ? "bg-[#172a4d] text-[#8cb5ff] ring-[#294a7a]"
     : value === "expired"
-      ? "bg-amber-50 text-amber-800"
-      : "bg-slate-100 text-slate-600";
+      ? "bg-[#3b2814] text-[#f5bd73] ring-[#68451d]"
+      : value === "recording_started"
+        ? "bg-[#271f48] text-[#b8a4ff] ring-[#4d3f7c]"
+        : "bg-[#1b2535] text-[#a8b3c5] ring-[#303e54]";
   return (
     <span
-      className={`inline-block max-w-full rounded-full px-3 py-1 text-xs font-medium ${color}`}
+      className={`inline-block max-w-full rounded-full px-3 py-1 text-xs font-semibold ring-1 ring-inset ${color}`}
     >
       {readable(value)}
     </span>
@@ -45,15 +47,15 @@ export function Status({ value }: { value: string }) {
 export function ProcessTable({ processes }: { processes: ClientProcess[] }) {
   return (
     <div className="@container min-w-0">
-      <ul aria-label="Client processes" className="divide-y divide-slate-100 @min-[36rem]:hidden">
+      <ul aria-label="Client processes" className="divide-y divide-[#273449] @min-[36rem]:hidden">
         {processes.map((p) => (
-          <li key={p.id} className="space-y-2 p-4">
-            <Link href={`/dashboard/clients/${p.id}`} className="flex min-h-11 items-center font-semibold text-teal-800 underline-offset-4 hover:underline">
+          <li key={p.id} className="space-y-2 p-4 transition hover:bg-[#151f2e]">
+            <Link href={`/dashboard/clients/${p.id}`} className="flex min-h-11 items-center font-semibold text-[#8cb5ff] underline-offset-4 hover:underline">
               {p.full_name}
             </Link>
-            <p className="text-sm text-slate-500">{p.phone_number}</p>
+            <p className="text-sm text-[#a8b3c5]">{p.phone_number}</p>
             <Status value={p.status} />
-            <p className="text-xs leading-5 text-slate-500">
+            <p className="text-xs leading-5 text-[#8e9db2]">
               Updated <DateText value={p.updated_at} />
             </p>
           </li>
@@ -61,29 +63,29 @@ export function ProcessTable({ processes }: { processes: ClientProcess[] }) {
       </ul>
       <div className="hidden @min-[36rem]:block">
       <table className="w-full table-fixed text-left text-sm">
-        <thead className="border-b border-slate-100 bg-slate-50 text-xs text-slate-500">
+        <thead className="border-b border-[#273449] bg-[#151e2c] text-xs font-semibold text-[#a8b3c5]">
           <tr>
             <th scope="col" className="w-[44%] p-4">Client</th>
             <th scope="col" className="w-[28%] p-4">Status</th>
             <th scope="col" className="w-[28%] p-4">Last updated</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
+        <tbody className="divide-y divide-[#273449]">
           {processes.map((p) => (
-            <tr key={p.id}>
+            <tr key={p.id} className="transition hover:bg-[#151f2e]">
               <td className="p-4">
                 <Link
                   href={`/dashboard/clients/${p.id}`}
-                  className="flex min-h-11 items-center font-semibold text-teal-800 underline-offset-4 hover:underline"
+                  className="flex min-h-11 items-center font-semibold text-[#8cb5ff] underline-offset-4 hover:underline"
                 >
                   {p.full_name}
                 </Link>
-                <p className="mt-1 text-xs text-slate-500">{p.phone_number}</p>
+                <p className="mt-1 text-xs text-[#8e9db2]">{p.phone_number}</p>
               </td>
               <td className="p-4">
                 <Status value={p.status} />
               </td>
-              <td className="p-4 text-xs text-slate-500">
+              <td className="p-4 text-xs leading-5 text-[#8e9db2]">
                 <DateText value={p.updated_at} />
               </td>
             </tr>
@@ -92,9 +94,7 @@ export function ProcessTable({ processes }: { processes: ClientProcess[] }) {
       </table>
       </div>
       {!processes.length && (
-        <p className="p-8 text-center text-sm text-slate-500">
-          No client processes found.
-        </p>
+        <div className="px-6 py-12 text-center"><div className="mx-auto mb-3 grid size-11 place-items-center rounded-full bg-[#172a4d] text-xl text-[#79a8ff]">◎</div><p className="font-semibold text-[#e8eef8]">No client processes found.</p><p className="mt-1 text-sm text-[#a8b3c5]">Try changing the filters or create a new client.</p></div>
       )}
     </div>
   );
