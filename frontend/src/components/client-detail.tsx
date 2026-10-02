@@ -6,6 +6,7 @@ import { useHydrated } from "@/lib/use-hydrated";
 import { apiRequest } from "@/lib/api";
 import { DateText, readable, Status } from "@/components/process-ui";
 import { LinkPanel } from "@/components/link-panel";
+import { ConfirmationModal } from "@/components/confirmation-modal";
 import type { IssuedLink, ProcessDetail } from "@/lib/types";
 
 export function ClientDetail({ process }: { process: ProcessDetail }) {
@@ -15,9 +16,9 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const [playing, setPlaying] = useState(false);
-  const [confirmation, setConfirmation] = useState<"link" | "delete" | null>(
-    null,
-  );
+  const [confirmation, setConfirmation] = useState<
+    "link" | "delete" | "review" | null
+  >(null);
   const video = process.video;
   const closed = ["submitted", "reviewed", "deleted"].includes(process.status);
   const endpoint = `/admin/processes/${process.id}`;
@@ -39,11 +40,37 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Action failed. Please retry.");
+      setConfirmation(null);
       router.refresh();
     } finally {
       setPending(false);
     }
   }
+  const confirmationContent = confirmation
+    ? {
+        link: {
+          title: "Replace registration link?",
+          description:
+            "A new private link will be valid for 48 hours and the previous link will stop working. Registration and consent already provided will be preserved.",
+          confirmLabel: "Generate replacement",
+          destructive: false,
+        },
+        delete: {
+          title: "Delete facial video?",
+          description:
+            "The video will be permanently removed from private storage. The client record and audit history will remain. This action cannot be undone.",
+          confirmLabel: "Delete permanently",
+          destructive: true,
+        },
+        review: {
+          title: "Mark video as reviewed?",
+          description:
+            "This records that an administrator has completed the manual video review and updates the client process status.",
+          confirmLabel: "Mark reviewed",
+          destructive: false,
+        },
+      }[confirmation]
+    : null;
   return (
     <>
       <Link href="/dashboard/clients" className="touch-target rounded-lg px-2 text-sm font-semibold text-[#8cb5ff] hover:bg-[#182641]">
@@ -71,38 +98,17 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
           {error}
         </p>
       )}
-      {confirmation && (
-        <div
-          role="alertdialog"
-          aria-label={
-            confirmation === "delete"
-              ? "Confirm video deletion"
-              : "Confirm link replacement"
-          }
-          className="mb-6 rounded-2xl border border-[#68451d] bg-[#2e2114] p-5"
-        >
-          <p className="text-sm leading-6">
-            {confirmation === "delete"
-              ? "Permanently delete this video from private storage? The client record and audit history will remain. This cannot be undone."
-              : "Generate a new 48-hour link? Any previous link will stop working. Registration and consent already provided will be preserved."}
-          </p>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <button
-              disabled={pending || !hydrated}
-              onClick={() => act(confirmation)}
-              className="primary-button"
-            >
-              {pending ? "Working…" : "Confirm"}
-            </button>
-            <button
-              disabled={pending || !hydrated}
-              onClick={() => setConfirmation(null)}
-              className="secondary-button"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
+      {confirmation && confirmationContent && (
+        <ConfirmationModal
+          open
+          title={confirmationContent.title}
+          description={confirmationContent.description}
+          confirmLabel={confirmationContent.confirmLabel}
+          destructive={confirmationContent.destructive}
+          pending={pending}
+          onConfirm={() => act(confirmation)}
+          onClose={() => setConfirmation(null)}
+        />
       )}
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(19rem,0.8fr)_minmax(26rem,1.2fr)]">
         <div className="min-w-0 space-y-6">
@@ -237,7 +243,7 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
                       {process.status !== "reviewed" && (
                         <button
                           disabled={pending || !hydrated}
-                          onClick={() => act("review")}
+                          onClick={() => setConfirmation("review")}
                           className="touch-target text-sm font-medium text-[#8cb5ff] underline"
                         >
                           Mark reviewed
@@ -261,7 +267,7 @@ export function ClientDetail({ process }: { process: ProcessDetail }) {
                     <button
                       className="primary-button"
                       disabled={pending || !hydrated}
-                      onClick={() => act("delete")}
+                      onClick={() => setConfirmation("delete")}
                     >
                       Retry deletion
                     </button>

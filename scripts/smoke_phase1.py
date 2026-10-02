@@ -256,6 +256,9 @@ with get_session_factory()() as db:
                 admin.get_by_role("link", name="Download video").click()
             assert download.value.suggested_filename == "recording.webm"
             admin.get_by_role("button", name="Mark reviewed").click()
+            review_modal = admin.get_by_role("alertdialog")
+            expect(review_modal).to_be_visible()
+            review_modal.get_by_role("button", name="Mark reviewed").click()
             expect(admin.get_by_text("Reviewed", exact=True)).to_be_visible()
 
             # Verify the stored object cannot be read without S3 authentication.
@@ -283,7 +286,9 @@ except urllib.error.HTTPError as e:
             )
 
             admin.get_by_role("button", name="Delete video", exact=True).click()
-            admin.get_by_role("button", name="Confirm", exact=True).click()
+            delete_modal = admin.get_by_role("alertdialog")
+            expect(delete_modal).to_be_visible()
+            delete_modal.get_by_role("button", name="Delete permanently").click()
             expect(admin.get_by_text("Deleted", exact=True)).to_be_visible()
             assert (
                 admin_context.request.get(
